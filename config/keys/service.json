@@ -1,0 +1,15 @@
+{
+  "sam_api_key": "SAM-3026a354-9c54-4e8b-afd5-13728a33d13e",
+  "openai": {
+    "api_key": "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",
+    "project_id": "provision-systems-fedwatch"
+  },
+  "notifications": {
+    "email_from": "alerts@provision.systems",
+    "slack_webhook": "YOUR_SLACK_WEBHOOK"
+  },
+  "database": {
+    "url": "https://pzqeibaqlwmfglbiumjt.supabase.co",
+    "anon_key": "sb_secret_AHmU-t_XFtoaFhpC7jPo3A_MRUShn4c"
+  }
+}

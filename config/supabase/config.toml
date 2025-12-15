@@ -1,0 +1,8 @@
+[functions.sam_fetcher.schedule]
+cron = "*/30 * * * *"
+
+[functions.notice_scorer.schedule]
+cron = "*/45 * * * *"
+
+[functions.dispatcher.schedule]
+cron = "*/10 * * * *"
