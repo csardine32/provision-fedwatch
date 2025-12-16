@@ -41,5 +41,16 @@ jobs:
           if [[ -z "${SUPABASE_PROJECT_REF:-}" ]]; then
             export SUPABASE_PROJECT_REF="pzqeibaqlwmfglbiumjt"
           fi
-          chmod +x scripts/smoke_scorer.sh
-          ./scripts/smoke_scorer.sh
+
+          SCRIPT_PATH=""
+          if [[ -f "scripts/smoke_scorer.sh" ]]; then
+            SCRIPT_PATH="scripts/smoke_scorer.sh"
+          elif [[ -f "supabase/functions/scorer/scripts/smoke_scorer.sh" ]]; then
+            SCRIPT_PATH="supabase/functions/scorer/scripts/smoke_scorer.sh"
+          else
+            echo "Could not find smoke_scorer.sh in expected locations." >&2
+            exit 1
+          fi
+
+          chmod +x "$SCRIPT_PATH"
+          "$SCRIPT_PATH"
