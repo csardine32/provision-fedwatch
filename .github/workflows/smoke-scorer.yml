@@ -1,0 +1,56 @@
+name: "Smoke Test – Scorer"
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: smoke-scorer-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Ensure tools
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y jq
+          python3 --version
+          curl --version
+
+      - name: Run scorer smoke test
+        env:
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
+        run: |
+          set -euo pipefail
+          if [[ -z "${SUPABASE_ANON_KEY:-}" ]]; then
+            echo "Missing SUPABASE_ANON_KEY secret. Add it in GitHub Secrets to enable this smoke test."
+            exit 1
+          fi
+          if [[ -z "${SUPABASE_PROJECT_REF:-}" ]]; then
+            export SUPABASE_PROJECT_REF="pzqeibaqlwmfglbiumjt"
+          fi
+
+          SCRIPT_PATH=""
+          if [[ -f "scripts/smoke_scorer.sh" ]]; then
+            SCRIPT_PATH="scripts/smoke_scorer.sh"
+          elif [[ -f "supabase/functions/scorer/scripts/smoke_scorer.sh" ]]; then
+            SCRIPT_PATH="supabase/functions/scorer/scripts/smoke_scorer.sh"
+          else
+            echo "Could not find smoke_scorer.sh in expected locations." >&2
+            exit 1
+          fi
+
+          chmod +x "$SCRIPT_PATH"
+          "$SCRIPT_PATH"
