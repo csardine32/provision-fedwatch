@@ -22,5 +22,32 @@
 }
 ```
 
+## AI Collaboration
+- AI workflow: ./AI_WORKFLOW.md
+- PR checklist: ./PR_CHECKLIST.md
+
 ## Deploy
 Use your serverless platform of choice (e.g., Supabase Edge Functions) and ensure `config/keys/service.json` is available at runtime or injected as secrets.
+
+## AI Collaboration
+- AI workflow: ./AI_WORKFLOW.md
+- PR checklist: ./PR_CHECKLIST.md
+
+## Smoke test
+```bash
+export SUPABASE_ANON_KEY=your_anon_key
+export SUPABASE_PROJECT_REF=pzqeibaqlwmfglbiumjt
+./scripts/smoke_scorer.sh
+```
+
+## CI Smoke Test
+- GitHub Actions workflow: "Smoke Test – Scorer" runs on PRs and pushes to main.
+- Add GitHub Secrets:
+  - SUPABASE_ANON_KEY (required)
+  - SUPABASE_PROJECT_REF (required)
+
+## Opportunity Bot
+- Config: `config/opportunity-bot.json`
+- Docs: `docs/opportunity-bot.md`
+- Run dry-run: `node bot/cli.js run --dry-run`
+- Run live: `node bot/cli.js run`

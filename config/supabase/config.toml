@@ -1,7 +1,7 @@
-[functions.sam_fetcher.schedule]
+[functions.sam-watcher.schedule]
 cron = "*/30 * * * *"
 
-[functions.notice_scorer.schedule]
+[functions.scorer.schedule]
 cron = "*/45 * * * *"
 
 [functions.dispatcher.schedule]
