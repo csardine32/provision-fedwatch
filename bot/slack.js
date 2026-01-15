@@ -22,13 +22,6 @@ export function buildSlackPayload({ opportunity, score }) {
 
   const blocks = [
     { type: "header", text: { type: "plain_text", text: headerText } },
-    {
-      type: "section",
-      text: {
-        type: "mrkdwn",
-        text: `Basic alert for opportunity: *${opportunity.title || "Untitled"}*`,
-      },
-    },
   ];
 
   return { text: headerText, blocks };
