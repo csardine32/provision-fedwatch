@@ -34,10 +34,11 @@ jobs:
 
       - name: Send Slack Notification
         uses: slackapi/slack-github-action@v1.24.0
-        if: always() # Always run this step to send a notification on success or failure
+        if: always()
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN_STATUS }}
         with:
           channel-id: ${{ secrets.SLACK_CHANNEL_ID_STATUS }}
-          slack-bot-token: ${{ secrets.SLACK_BOT_TOKEN_STATUS }}
           payload: |
             {
               "text": "FedWatch Bot Run Completed",
