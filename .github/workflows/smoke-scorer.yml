@@ -39,7 +39,8 @@ jobs:
             exit 1
           fi
           if [[ -z "${SUPABASE_PROJECT_REF:-}" ]]; then
-            export SUPABASE_PROJECT_REF="pzqeibaqlwmfglbiumjt"
+            echo "Missing SUPABASE_PROJECT_REF secret. Add it in GitHub Secrets to enable this smoke test."
+            exit 1
           fi
 
           SCRIPT_PATH=""

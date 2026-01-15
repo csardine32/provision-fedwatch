@@ -1,0 +1,31 @@
+name: Scheduled Bot Run
+
+on:
+  schedule:
+    # Runs at 9:05 AM and 4:05 PM EST (14:05 and 21:05 UTC)
+    - cron: '5 14,21 * * *'
+  workflow_dispatch:
+
+jobs:
+  run-bot:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18.x'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run the bot
+        env:
+          SAM_API_KEY: ${{ secrets.SAM_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+          SLACK_BOT_TOKEN_PROVISIONS: ${{ secrets.SLACK_BOT_TOKEN_PROVISIONS }}
+        run: node bot/cli.js run

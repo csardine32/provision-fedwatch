@@ -1,3 +1,12 @@
 [functions]
   [functions."sam-watcher"]
   verify_jwt = false
+
+[functions.sam-watcher.schedule]
+cron = "*/30 * * * *"
+
+[functions.scorer.schedule]
+cron = "*/45 * * * *"
+
+[functions.dispatcher.schedule]
+cron = "*/10 * * * *"
