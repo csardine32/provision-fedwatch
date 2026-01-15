@@ -88,6 +88,57 @@ async function fetchWithRetry(url, { fetchImpl, logger, maxAttempts = 4 }) {
   return fetchImpl(url, { method: "GET" });
 }
 
+async function fetchOpportunitiesForNaics(ncode, { apiKey, baseUrl, postedFrom, postedTo, limit, filters, maxPages, fetchImpl, logger }) {
+    const results = [];
+    let offset = 0;
+    let totalRecords = null;
+    let pagesFetched = 0;
+    const pageBudget = Number.isFinite(maxPages) ? maxPages : null;
+
+    while (true) {
+        const params = {
+            api_key: apiKey,
+            postedFrom,
+            postedTo,
+            limit,
+            offset,
+            ptype: filters.ptype,
+            ncode: ncode, // Use the single ncode
+            ccode: filters.psc,
+            organizationName: filters.organizationName,
+            state: filters.state,
+            zip: filters.zip,
+            rdlfrom: filters.rdlfrom,
+            rdlto: filters.rdlto,
+            keyword: filters.keywords,
+        };
+        const url = buildSearchUrl(baseUrl, params);
+        logger.debug("SAM request", url);
+        const resp = await fetchWithRetry(url, { fetchImpl, logger });
+        if (resp.status === 429 && (await isQuotaExceeded(resp))) {
+            logger.warn("[sam] Quota exceeded; stopping early");
+            break;
+        }
+        if (!resp.ok) {
+            const text = await resp.text();
+            throw new SamApiError(`SAM API error ${resp.status}`, resp.status, text);
+        }
+        const json = await resp.json();
+        const batch = json?.opportunitiesData ?? [];
+        results.push(...batch);
+        totalRecords = json?.totalRecords ?? totalRecords ?? results.length;
+        pagesFetched += 1;
+        if (pageBudget !== null && pagesFetched >= pageBudget) {
+            logger.warn(`[sam] Reached max_pages_per_run=${pageBudget}; stopping early`);
+            break;
+        }
+        offset += limit;
+        if (results.length >= totalRecords || batch.length === 0) break;
+    }
+
+    return results;
+}
+
 export async function fetchSamOpportunities({
   apiKey,
   baseUrl,
@@ -115,52 +166,21 @@ export async function fetchSamOpportunities({
     return { totalRecords: opportunities.length, opportunities };
   }
 
-  const results = [];
-  let offset = 0;
-  let totalRecords = null;
-  let pagesFetched = 0;
-  const pageBudget = Number.isFinite(maxPages) ? maxPages : null;
+  const allOpportunities = [];
+  const naicsCodes = filters.naics;
 
-  while (true) {
-    const params = {
-      api_key: apiKey,
-      postedFrom,
-      postedTo,
-      limit,
-      offset,
-      ptype: filters.ptype,
-      ncode: filters.naics,
-      ccode: filters.psc,
-      organizationName: filters.organizationName,
-      state: filters.state,
-      zip: filters.zip,
-      rdlfrom: filters.rdlfrom,
-      rdlto: filters.rdlto,
-      keyword: filters.keywords,
-    };
-    const url = buildSearchUrl(baseUrl, params);
-    logger.debug("SAM request", url);
-    const resp = await fetchWithRetry(url, { fetchImpl, logger });
-    if (resp.status === 429 && (await isQuotaExceeded(resp))) {
-      logger.warn("[sam] Quota exceeded; stopping early");
-      break;
+  if (naicsCodes && naicsCodes.length > 0) {
+    for (const ncode of naicsCodes) {
+      const opportunities = await fetchOpportunitiesForNaics(ncode, { apiKey, baseUrl, postedFrom, postedTo, limit, filters, maxPages, fetchImpl, logger });
+      allOpportunities.push(...opportunities);
     }
-    if (!resp.ok) {
-      const text = await resp.text();
-      throw new SamApiError(`SAM API error ${resp.status}`, resp.status, text);
-    }
-    const json = await resp.json();
-    const batch = json?.opportunitiesData ?? [];
-    results.push(...batch);
-    totalRecords = json?.totalRecords ?? totalRecords ?? results.length;
-    pagesFetched += 1;
-    if (pageBudget !== null && pagesFetched >= pageBudget) {
-      logger.warn(`[sam] Reached max_pages_per_run=${pageBudget}; stopping early`);
-      break;
-    }
-    offset += limit;
-    if (results.length >= totalRecords || batch.length === 0) break;
+  } else {
+    const opportunities = await fetchOpportunitiesForNaics(null, { apiKey, baseUrl, postedFrom, postedTo, limit, filters, maxPages, fetchImpl, logger });
+    allOpportunities.push(...opportunities);
   }
 
-  return { totalRecords: totalRecords ?? results.length, opportunities: results };
+  // Deduplicate opportunities
+  const uniqueOpportunities = [...new Map(allOpportunities.map(item => [item.noticeId, item])).values()];
+
+  return { totalRecords: uniqueOpportunities.length, opportunities: uniqueOpportunities };
 }
