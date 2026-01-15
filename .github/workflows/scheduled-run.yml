@@ -29,3 +29,49 @@ jobs:
           SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
           SLACK_BOT_TOKEN_PROVISIONS: ${{ secrets.SLACK_BOT_TOKEN_PROVISIONS }}
         run: node bot/cli.js run
+
+      - name: Send Slack Notification
+        uses: slackapi/slack-github-action@v1.24.0
+        if: always() # Always run this step to send a notification on success or failure
+        with:
+          channel-id: ${{ secrets.SLACK_CHANNEL_ID_STATUS }}
+          slack-bot-token: ${{ secrets.SLACK_BOT_TOKEN_STATUS }}
+          payload: |
+            {
+              "text": "FedWatch Bot Run Completed",
+              "blocks": [
+                {
+                  "type": "header",
+                  "text": {
+                    "type": "plain_text",
+                    "text": "FedWatch Bot Run Completed :robot_face:"
+                  }
+                },
+                {
+                  "type": "section",
+                  "fields": [
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Status:*\n${{ job.status == 'success' ? ':white_check_mark: Success' : ':x: Failure' }}"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Workflow:*\n${{ github.workflow }}"
+                    }
+                  ]
+                },
+                {
+                  "type": "actions",
+                  "elements": [
+                    {
+                      "type": "button",
+                      "text": {
+                        "type": "plain_text",
+                        "text": "View Run"
+                      },
+                      "url": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+                    }
+                  ]
+                }
+              ]
+            }
