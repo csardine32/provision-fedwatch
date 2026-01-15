@@ -1,8 +1,7 @@
 name: Opportunity Bot Scheduled Run
 
 on:
-  push:
-    branches: [ main ] # Temporary: remove once visible
+
   schedule:
     # Runs at 9:05 AM and 4:05 PM EST (14:05 and 21:05 UTC)
     - cron: '5 14,21 * * *'
@@ -32,8 +31,6 @@ jobs:
           SLACK_BOT_TOKEN_PROVISIONS: ${{ secrets.SLACK_BOT_TOKEN_PROVISIONS }}
         run: node bot/cli.js run
 
-      - name: Temporary Health Check Echo
-        run: echo "Workflow file is being recognized and this step is running!" # Temporary: remove once visible
 
       - name: Send Slack Notification
         uses: slackapi/slack-github-action@v1.24.0
@@ -57,7 +54,7 @@ jobs:
                   "fields": [
                     {
                       "type": "mrkdwn",
-                      "text": "*Status:*\n${{ job.status == 'success' ? ':white_check_mark: Success' : ':x: Failure' }}"
+                      "text": "*Status:*\n${{ if(job.status == 'success', ':white_check_mark: Success', ':x: Failure') }}"
                     },
                     {
                       "type": "mrkdwn",
