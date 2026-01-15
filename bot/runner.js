@@ -7,6 +7,7 @@ import {
   buildOpportunityHash,
   deterministicScore,
   scoreToLabel,
+  shouldAlert,
 } from "./scoring.js";
 import { scoreWithAi } from "./ai.js";
 import { buildSlackPayload, postSlackAlert, postSlackMessage } from "./slack.js";

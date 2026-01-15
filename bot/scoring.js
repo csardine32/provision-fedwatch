@@ -104,3 +104,19 @@ export function validateAiScore(payload) {
   const mustCheckOk = Array.isArray(payload.must_check_items);
   return labelOk && scoreOk && confidenceOk && reasonsOk && risksOk && stepsOk && tagsOk && mustCheckOk;
 }
+
+export function shouldAlert({ score, config, state, hash }) {
+  const alertedBefore = state?.last_alerted_hash === hash;
+  if (alertedBefore) return false;
+
+  if (score.fit_label === "GOOD_FIT" && config.alerting.post_good_fit) {
+    return true;
+  }
+  if (score.fit_label === "MAYBE" && config.alerting.post_maybe) {
+    return true;
+  }
+  if (score.fit_label === "NOT_A_FIT" && config.alerting.post_not_a_fit) {
+    return true;
+  }
+  return false;
+}
