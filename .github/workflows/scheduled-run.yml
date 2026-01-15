@@ -1,0 +1,77 @@
+name: Scheduled Bot Run
+
+on:
+  schedule:
+    # Runs at 9:05 AM and 4:05 PM EST (14:05 and 21:05 UTC)
+    - cron: '5 14,21 * * *'
+  workflow_dispatch:
+
+jobs:
+  run-bot:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18.x'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run the bot
+        env:
+          SAM_API_KEY: ${{ secrets.SAM_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+          SLACK_BOT_TOKEN_PROVISIONS: ${{ secrets.SLACK_BOT_TOKEN_PROVISIONS }}
+        run: node bot/cli.js run
+
+      - name: Send Slack Notification
+        uses: slackapi/slack-github-action@v1.24.0
+        if: always() # Always run this step to send a notification on success or failure
+        with:
+          channel-id: ${{ secrets.SLACK_CHANNEL_ID_STATUS }}
+          slack-bot-token: ${{ secrets.SLACK_BOT_TOKEN_STATUS }}
+          payload: |
+            {
+              "text": "FedWatch Bot Run Completed",
+              "blocks": [
+                {
+                  "type": "header",
+                  "text": {
+                    "type": "plain_text",
+                    "text": "FedWatch Bot Run Completed :robot_face:"
+                  }
+                },
+                {
+                  "type": "section",
+                  "fields": [
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Status:*\n${{ job.status == 'success' ? ':white_check_mark: Success' : ':x: Failure' }}"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Workflow:*\n${{ github.workflow }}"
+                    }
+                  ]
+                },
+                {
+                  "type": "actions",
+                  "elements": [
+                    {
+                      "type": "button",
+                      "text": {
+                        "type": "plain_text",
+                        "text": "View Run"
+                      },
+                      "url": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+                    }
+                  ]
+                }
+              ]
+            }
