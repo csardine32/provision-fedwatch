@@ -179,13 +179,12 @@ export async function runOpportunityBot({
 } = {}) {
   const { config } = loadConfig(configPath);
   const logger = createLogger({ verbose });
-  const db = await initStorage(config.storage.sqlite_path);
+  const db = await initStorage(config.storage.sqlite_path); // This is an external call, could hang
 
   const summaries = [];
   for (const profile of config.profiles) {
-    const summary = await runProfile(profile, { db, logger, dryRun, backfillDays, fetchImpl, now });
+    const summary = await runProfile(profile, { db, logger, dryRun, backfillDays, fetchImpl, now }); // This calls runProfile
     summaries.push(summary);
   }
-
   return summaries;
 }
