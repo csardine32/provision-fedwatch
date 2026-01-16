@@ -1,6 +1,6 @@
 import { loadConfig, requireEnv } from "./config.js";
-/*
 import { createLogger } from "./logger.js";
+/*
 import { fetchSamOpportunities } from "./sam_client.js";
 import { normalizeOpportunity } from "./normalizer.js";
 import { fetchDescriptionText } from "./enrich.js";
@@ -16,7 +16,7 @@ import { buildSlackPayload, postSlackAlert, postSlackMessage } from "./slack.js"
 import { initStorage, upsertOpportunity, getOpportunityState, saveScore, saveAlert } from "./storage.js";
 import { formatDateMMDDYYYY } from "./utils.js";
 */
-console.log("runner.js loaded with config import");
+console.log("runner.js loaded with config and logger imports");
 
 export async function runOpportunityBot({
   dryRun = false,
@@ -27,6 +27,7 @@ export async function runOpportunityBot({
   verbose = false,
 } = {}) {
   const { config } = loadConfig(configPath);
-  console.log("runOpportunityBot called with config import");
-  console.log("Config loaded:", config);
+  const logger = createLogger({ verbose });
+  console.log("runOpportunityBot called with config and logger imports");
+  logger.info("Config and logger loaded successfully");
 }
