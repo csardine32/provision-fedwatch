@@ -94,15 +94,19 @@ export function buildOpportunityHash(opportunity, descriptionText) {
 
 export function validateAiScore(payload) {
   if (!payload || typeof payload !== "object") return false;
+
+  const isRelevantOk = typeof payload.is_relevant === "boolean";
+  const summaryOk = typeof payload.plain_english_summary === "string";
+  const skillsetsOk = Array.isArray(payload.required_skillsets);
   const labelOk = ["GOOD_FIT", "MAYBE", "NOT_A_FIT"].includes(payload.fit_label);
   const scoreOk = Number.isFinite(payload.fit_score);
-  const confidenceOk = Number.isFinite(payload.confidence);
   const reasonsOk = Array.isArray(payload.reasons);
   const risksOk = Array.isArray(payload.risks);
-  const stepsOk = Array.isArray(payload.recommended_next_steps);
-  const tagsOk = Array.isArray(payload.tags);
+  const keyDatesOk = typeof payload.key_dates === "object" && payload.key_dates !== null && typeof payload.key_dates.due_date === "string" && Array.isArray(payload.key_dates.other_dates);
+  const attachmentSummaryOk = typeof payload.attachment_summary === "string";
   const mustCheckOk = Array.isArray(payload.must_check_items);
-  return labelOk && scoreOk && confidenceOk && reasonsOk && risksOk && stepsOk && tagsOk && mustCheckOk;
+
+  return isRelevantOk && summaryOk && skillsetsOk && labelOk && scoreOk && reasonsOk && risksOk && keyDatesOk && attachmentSummaryOk && mustCheckOk;
 }
 
 export function shouldAlert({ score, config, state, hash }) {
