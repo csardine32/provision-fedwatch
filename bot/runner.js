@@ -1,9 +1,9 @@
 import { loadConfig, requireEnv } from "./config.js";
 import { createLogger } from "./logger.js";
 import { fetchSamOpportunities } from "./sam_client.js";
-/*
 import { normalizeOpportunity } from "./normalizer.js";
 import { fetchDescriptionText } from "./enrich.js";
+/*
 import {
   buildOpportunityHash,
   deterministicScore,
@@ -16,7 +16,7 @@ import { buildSlackPayload, postSlackAlert, postSlackMessage } from "./slack.js"
 import { initStorage, upsertOpportunity, getOpportunityState, saveScore, saveAlert } from "./storage.js";
 import { formatDateMMDDYYYY } from "./utils.js";
 */
-console.log("runner.js loaded with sam_client import");
+console.log("runner.js loaded with normalizer and enrich imports");
 
 export async function runOpportunityBot({
   dryRun = false,
@@ -28,6 +28,6 @@ export async function runOpportunityBot({
 } = {}) {
   const { config } = loadConfig(configPath);
   const logger = createLogger({ verbose });
-  console.log("runOpportunityBot called with sam_client import");
-  logger.info("Config, logger, and sam_client loaded successfully");
+  console.log("runOpportunityBot called with normalizer and enrich imports");
+  logger.info("Config, logger, sam_client, normalizer, and enrich loaded successfully");
 }
