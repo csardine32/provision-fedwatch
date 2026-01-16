@@ -122,28 +122,34 @@ async function runProfile(profile, { db, logger, dryRun, backfillDays, fetchImpl
     summary.scored += 1;
 
     if (shouldAlert({ score, config: profile, state, hash })) {
-      const payload = buildSlackPayload({ opportunity: normalized, score });
-      if (dryRun) {
-        logger.info(`[${profile.name}] [dry-run] Would alert ${score.fit_label}: ${normalized.title}`);
-      } else {
-        const slackWebhook = profile.slack?.webhook_url_env
-          ? process.env[profile.slack.webhook_url_env]
-          : null;
-        const slackBotToken = profile.slack?.bot_token_env ? process.env[profile.slack.bot_token_env] : null;
-        const slackChannel = profile.slack?.channel ?? null;
-
-        if (slackBotToken && slackChannel) {
-          await postSlackMessage({ token: slackBotToken, channel: slackChannel, payload, fetchImpl });
-        } else if (slackWebhook) {
-          await postSlackAlert({ webhookUrl: slackWebhook, payload, fetchImpl });
+      try {
+        const payload = buildSlackPayload({ opportunity: normalized, score });
+        if (dryRun) {
+          logger.info(`[${profile.name}] [dry-run] Would alert ${score.fit_label}: ${normalized.title}`);
         } else {
-          logger.warn(`[${profile.name}] No Slack configuration found for live run.`);
-        }
+          const slackWebhook = profile.slack?.webhook_url_env
+            ? process.env[profile.slack.webhook_url_env]
+            : null;
+          const slackBotToken = profile.slack?.bot_token_env ? process.env[profile.slack.bot_token_env] : null;
+          const slackChannel = profile.slack?.channel ?? null;
 
-        await saveAlert(db, normalized.noticeId, score, payload, nowIso, hash);
-        logger.info(`[${profile.name}] Alerted ${score.fit_label}: ${normalized.title}`);
+          if (slackBotToken && slackChannel) {
+            await postSlackMessage({ token: slackBotToken, channel: slackChannel, payload, fetchImpl });
+          } else if (slackWebhook) {
+            await postSlackAlert({ webhookUrl: slackWebhook, payload, fetchImpl });
+          } else {
+            logger.warn(`[${profile.name}] No Slack configuration found for live run.`);
+          }
+
+          await saveAlert(db, normalized.noticeId, score, payload, nowIso, hash);
+          logger.info(`[${profile.name}] Alerted ${score.fit_label}: ${normalized.title}`);
+        }
+        summary.alerted += 1;
+      } catch (error) {
+        logger.error(`[${profile.name}] Failed to send alert for opportunity ${normalized.noticeId}: ${error.message}`);
+        // Log the full error for debugging if needed, especially for invalid_blocks
+        logger.debug(error);
       }
-      summary.alerted += 1;
     }
   }
 

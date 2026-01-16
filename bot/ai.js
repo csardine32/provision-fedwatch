@@ -63,20 +63,23 @@ export async function scoreWithAi({
       const extracted = extractJsonBlock(content);
       const parsed = safeJsonParse(extracted);
       if (!parsed.ok || !validateAiScore(parsed.value)) {
-        // TODO: Update validateAiScore to match the new schema.
-        // throw new Error("Invalid AI JSON response");
+        throw new Error("Invalid AI JSON response");
       }
       return parsed.value;
     } catch (error) {
-      if (error.message && error.message.includes("429 Too Many Requests")) {
+      const is429 = error.message && error.message.includes("429 Too Many Requests");
+      const is5xx = error.message && /5\d{2}/.test(error.message); // regex for 5xx status codes
+
+      if (is429 || is5xx) {
         const retryDelayMatch = error.message.match(/Please retry in (\d+\.\d+)s/);
         let retryDelay = 5000 * attempt; // default backoff
         if (retryDelayMatch && retryDelayMatch[1]) {
           retryDelay = Math.ceil(parseFloat(retryDelayMatch[1]) * 1000);
         }
         
+        const reason = is429 ? "429 rate limit" : "5xx server error";
         logger.warn(
-          `AI scoring failed with 429 error. Retrying in ${retryDelay}ms...`
+          `AI scoring failed with ${reason}. Retrying in ${retryDelay}ms... (attempt ${attempt}/${maxRetries})`
         );
         await new Promise((resolve) => setTimeout(resolve, retryDelay));
         continue;
