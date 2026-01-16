@@ -47,6 +47,7 @@ async function runProfile(profile, { db, logger, dryRun, backfillDays, fetchImpl
   let descriptionFetches = 0;
   let capLogged = false;
   const descriptionCap = profile.sam.max_descriptions_per_run ?? 10;
+  let goodFitAlertsSent = 0; // Initialize counter for GOOD_FIT alerts
 
   for (const raw of opportunities) {
     const normalized = normalizeOpportunity(raw);
@@ -122,6 +123,15 @@ async function runProfile(profile, { db, logger, dryRun, backfillDays, fetchImpl
     summary.scored += 1;
 
     if (shouldAlert({ score, config: profile, state, hash })) {
+      // Cap GOOD_FIT alerts for testing purposes
+      if (score.fit_label === "GOOD_FIT") {
+        if (profile.alerting.max_good_fit_alerts && goodFitAlertsSent >= profile.alerting.max_good_fit_alerts) {
+          logger.info(`[${profile.name}] Max GOOD_FIT alerts (${profile.alerting.max_good_fit_alerts}) reached; skipping alert for ${normalized.title}`);
+          continue; // Skip alerting this opportunity
+        }
+        goodFitAlertsSent++;
+      }
+
       try {
         const payload = buildSlackPayload({ opportunity: normalized, score });
         if (dryRun) {
@@ -147,7 +157,6 @@ async function runProfile(profile, { db, logger, dryRun, backfillDays, fetchImpl
         summary.alerted += 1;
       } catch (error) {
         logger.error(`[${profile.name}] Failed to send alert for opportunity ${normalized.noticeId}: ${error.message}`);
-        // Log the full error for debugging if needed, especially for invalid_blocks
         logger.debug(error);
       }
     }

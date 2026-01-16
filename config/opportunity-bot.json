@@ -32,14 +32,10 @@
         "ai_model": "gemini-pro-latest",
         "ai_timeout_seconds": 25
       },
-      "slack": {
-        "bot_token_env": "SLACK_BOT_TOKEN",
-        "channel": "#test-rmc-opportunities",
-        "post_not_a_fit": false
-      },
       "alerting": {
         "post_good_fit": true,
-        "post_maybe": true
+        "post_maybe": true,
+        "max_good_fit_alerts": 5
       }
     },
     {
@@ -80,12 +76,13 @@
       },
       "slack": {
         "bot_token_env": "SLACK_BOT_TOKEN_PROVISIONS",
-        "channel": "#test-provisions-unlimited-opportunities",
+        "channel": "#test2-provisions-unlimited-opportunities",
         "post_not_a_fit": false
       },
       "alerting": {
         "post_good_fit": true,
-        "post_maybe": true
+        "post_maybe": true,
+        "max_good_fit_alerts": 5
       }
     }
   ],
