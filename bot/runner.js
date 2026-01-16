@@ -16,6 +16,7 @@ import { initStorage, upsertOpportunity, getOpportunityState, saveScore, saveAle
 import { formatDateMMDDYYYY } from "./utils.js";
 
 async function runProfile(profile, { db, logger, dryRun, backfillDays, fetchImpl, now }) {
+  logger.debug('ENV Keys in runner:', Object.keys(process.env));
   const nowIso = now.toISOString();
   const lookbackDays = backfillDays ?? profile.sam.posted_lookback_days ?? 1;
   const postedFrom = formatDateMMDDYYYY(new Date(now.getTime() - lookbackDays * 86400000));
