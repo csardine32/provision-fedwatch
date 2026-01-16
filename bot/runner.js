@@ -8,6 +8,7 @@ import {
   deterministicScore,
   scoreToLabel,
   shouldAlert,
+  buildFallbackScore,
 } from "./scoring.js";
 import { scoreWithAi } from "./ai.js";
 import { buildSlackPayload, postSlackAlert, postSlackMessage } from "./slack.js";

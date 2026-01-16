@@ -124,3 +124,19 @@ export function shouldAlert({ score, config, state, hash }) {
   }
   return false;
 }
+
+export function buildFallbackScore(preScore, thresholds) {
+  const fit_label = scoreToLabel(preScore, thresholds);
+  return {
+    is_relevant: true, // Assume relevant if we are scoring it
+    plain_english_summary: "AI scoring unavailable. This is a fallback score based on keyword matching.",
+    required_skillsets: [],
+    fit_label,
+    fit_score: preScore,
+    reasons: ["AI scoring unavailable; fallback used."],
+    risks: [],
+    key_dates: { due_date: "", other_dates: [] },
+    attachment_summary: "",
+    must_check_items: [],
+  };
+}
