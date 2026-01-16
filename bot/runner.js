@@ -152,12 +152,6 @@ async function runProfile(profile, { db, logger, dryRun, backfillDays, fetchImpl
   return summary;
 }
 
-  logger.info(
-    `[${profile.name}] Summary: total=${summary.total} scored=${summary.scored} alerted=${summary.alerted} skipped=${summary.skipped}`
-  );
-  return summary;
-}
-
 export async function runOpportunityBot({
   dryRun = false,
   backfillDays = null,
