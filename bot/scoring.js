@@ -76,7 +76,7 @@ export function scoreToLabel(score, { minGood, minMaybe }) {
   return "NOT_A_FIT";
 }
 
-export function buildOpportunityHash(opportunity, descriptionText) {
+export function buildOpportunityHash(opportunity, descriptionText, attachmentText) {
   return hashObject({
     noticeId: opportunity.noticeId,
     title: opportunity.title,
@@ -89,6 +89,7 @@ export function buildOpportunityHash(opportunity, descriptionText) {
     setAsideCode: opportunity.setAsideCode,
     placeOfPerformance: opportunity.placeOfPerformance,
     descriptionText: descriptionText ? descriptionText.slice(0, 4000) : "",
+    attachmentText: attachmentText ? attachmentText.slice(0, 4000) : "",
   });
 }
 

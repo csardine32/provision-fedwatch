@@ -56,6 +56,7 @@ export async function initStorage(dbPath) {
       ui_link TEXT,
       data_json TEXT,
       description_text TEXT,
+      attachment_text TEXT,
       last_seen_at TEXT,
       last_scored_at TEXT,
       last_alerted_at TEXT,
@@ -80,7 +81,7 @@ export async function initStorage(dbPath) {
   return db;
 }
 
-export async function upsertOpportunity(db, opportunity, descriptionText, hash, nowIso) {
+export async function upsertOpportunity(db, opportunity, descriptionText, attachmentText, hash, nowIso) {
   const existing = await get(db, "SELECT notice_id, hash FROM opportunities WHERE notice_id = ?", [
     opportunity.noticeId,
   ]);
@@ -89,9 +90,9 @@ export async function upsertOpportunity(db, opportunity, descriptionText, hash, 
       db,
       `INSERT INTO opportunities (
         notice_id, solicitation_number, title, agency, posted_date, response_deadline,
-        naics_code, set_aside, classification_code, ui_link, data_json, description_text,
+        naics_code, set_aside, classification_code, ui_link, data_json, description_text, attachment_text,
         last_seen_at, hash
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         opportunity.noticeId,
         opportunity.solicitationNumber,
@@ -105,6 +106,7 @@ export async function upsertOpportunity(db, opportunity, descriptionText, hash, 
         opportunity.uiLink,
         JSON.stringify(opportunity),
         descriptionText,
+        attachmentText,
         nowIso,
         hash,
       ]
@@ -124,6 +126,7 @@ export async function upsertOpportunity(db, opportunity, descriptionText, hash, 
         ui_link = ?,
         data_json = ?,
         description_text = ?,
+        attachment_text = ?,
         last_seen_at = ?,
         hash = ?
       WHERE notice_id = ?`,
@@ -139,6 +142,7 @@ export async function upsertOpportunity(db, opportunity, descriptionText, hash, 
         opportunity.uiLink,
         JSON.stringify(opportunity),
         descriptionText,
+        attachmentText,
         nowIso,
         hash,
         opportunity.noticeId,

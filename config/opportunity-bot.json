@@ -12,6 +12,7 @@
         "description_max_chars": 16000,
         "max_descriptions_per_run": 1,
         "max_pages_per_run": 2,
+        "fetch_attachments": true,
         "filters": {
           "naics": [
             541519,
@@ -55,6 +56,7 @@
         "description_max_chars": 16000,
         "max_descriptions_per_run": 1,
         "max_pages_per_run": 2,
+        "fetch_attachments": true,
         "filters": {
           "naics": [
             236220, 

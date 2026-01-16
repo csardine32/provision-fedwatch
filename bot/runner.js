@@ -2,7 +2,7 @@ import { loadConfig, requireEnv } from "./config.js";
 import { createLogger } from "./logger.js";
 import { fetchSamOpportunities } from "./sam_client.js";
 import { normalizeOpportunity } from "./normalizer.js";
-import { fetchDescriptionText } from "./enrich.js";
+import { fetchDescriptionText, fetchAttachmentText } from "./enrich.js";
 import {
   buildOpportunityHash,
   deterministicScore,
@@ -75,8 +75,18 @@ async function runProfile(profile, { db, logger, dryRun, backfillDays, fetchImpl
       }
     }
 
-    const hash = buildOpportunityHash(normalized, descriptionText);
-    await upsertOpportunity(db, normalized, descriptionText, hash, nowIso);
+    let attachmentText = "";
+    if (profile.sam.fetch_attachments) {
+        attachmentText = await fetchAttachmentText({
+            opportunity: normalized,
+            apiKey: samApiKey,
+            fetchImpl,
+            logger,
+        });
+    }
+
+    const hash = buildOpportunityHash(normalized, descriptionText, attachmentText);
+    await upsertOpportunity(db, normalized, descriptionText, attachmentText, hash, nowIso);
     const state = await getOpportunityState(db, normalized.noticeId);
 
     if (state?.hash === hash && state?.last_scored_at) {
@@ -106,7 +116,7 @@ async function runProfile(profile, { db, logger, dryRun, backfillDays, fetchImpl
           model: profile.scoring.ai_model,
           opportunity: normalized,
           descriptionText,
-          attachmentText: "", // TODO: Implement attachment fetching
+          attachmentText,
           companyProfile: profile.company_profile,
           logger,
         });
