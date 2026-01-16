@@ -11,12 +11,12 @@ import {
   buildFallbackScore,
 } from "./scoring.js";
 import { scoreWithAi } from "./ai.js";
-/*
 import { buildSlackPayload, postSlackAlert, postSlackMessage } from "./slack.js";
+/*
 import { initStorage, upsertOpportunity, getOpportunityState, saveScore, saveAlert } from "./storage.js";
 import { formatDateMMDDYYYY } from "./utils.js";
 */
-console.log("runner.js loaded with ai import");
+console.log("runner.js loaded with slack import");
 
 export async function runOpportunityBot({
   dryRun = false,
@@ -28,6 +28,6 @@ export async function runOpportunityBot({
 } = {}) {
   const { config } = loadConfig(configPath);
   const logger = createLogger({ verbose });
-  console.log("runOpportunityBot called with ai import");
-  logger.info("...and ai loaded successfully");
+  console.log("runOpportunityBot called with slack import");
+  logger.info("...and slack loaded successfully");
 }
