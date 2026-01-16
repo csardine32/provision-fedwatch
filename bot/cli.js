@@ -3,6 +3,7 @@ import dotenv from "dotenv";
 import { runOpportunityBot } from "./runner.js";
 
 dotenv.config();
+console.log("Loaded ENV Keys:", Object.keys(process.env));
 
 function parseArgs(argv) {
   const args = argv.slice(2);
