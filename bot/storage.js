@@ -86,69 +86,78 @@ export async function upsertOpportunity(db, opportunity, descriptionText, attach
     opportunity.noticeId,
   ]);
   if (!existing) {
-    await run(
-      db,
-      `INSERT INTO opportunities (
-        notice_id, solicitation_number, title, agency, posted_date, response_deadline,
-        naics_code, set_aside, classification_code, ui_link, data_json, description_text, attachment_text,
-        last_seen_at, hash
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [
-        opportunity.noticeId,
-        opportunity.solicitationNumber,
-        opportunity.title,
-        opportunity.agencyPath,
-        opportunity.postedDate,
-        opportunity.responseDeadline,
-        opportunity.naicsCode,
-        opportunity.setAside || opportunity.setAsideCode,
-        opportunity.classificationCode,
-        opportunity.uiLink,
-        JSON.stringify(opportunity),
-        descriptionText,
-        attachmentText,
-        nowIso,
-        hash,
-      ]
-    );
-  } else {
-    await run(
-      db,
-      `UPDATE opportunities SET
-        solicitation_number = ?,
-        title = ?,
-        agency = ?,
-        posted_date = ?,
-        response_deadline = ?,
-        naics_code = ?,
-        set_aside = ?,
-        classification_code = ?,
-        ui_link = ?,
-        data_json = ?,
-        description_text = ?,
-        attachment_text = ?,
-        last_seen_at = ?,
-        hash = ?
-      WHERE notice_id = ?`,
-      [
-        opportunity.solicitationNumber,
-        opportunity.title,
-        opportunity.agencyPath,
-        opportunity.postedDate,
-        opportunity.responseDeadline,
-        opportunity.naicsCode,
-        opportunity.setAside || opportunity.setAsideCode,
-        opportunity.classificationCode,
-        opportunity.uiLink,
-        JSON.stringify(opportunity),
-        descriptionText,
-        attachmentText,
-        nowIso,
-        hash,
-        opportunity.noticeId,
-      ]
-    );
-  }
+            const dataJson = JSON.stringify({
+              pointOfContact: opportunity.pointOfContact,
+              resourceLinks: opportunity.resourceLinks,
+            });
+            logger.debug(`[storage] Storing opportunity. Attachment text length: ${attachmentText?.length || 0}, JSON data length: ${dataJson.length}`);
+            await run(
+              db,
+              `INSERT INTO opportunities (
+                notice_id, solicitation_number, title, agency, posted_date, response_deadline,
+                naics_code, set_aside, classification_code, ui_link, data_json, description_text, attachment_text,
+                last_seen_at, hash
+              ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+              [
+                opportunity.noticeId,
+                opportunity.solicitationNumber,
+                opportunity.title,
+                opportunity.agencyPath,
+                opportunity.postedDate,
+                opportunity.responseDeadline,
+                opportunity.naicsCode,
+                opportunity.setAside || opportunity.setAsideCode,
+                opportunity.classificationCode,
+                opportunity.uiLink,
+                dataJson,
+                descriptionText,
+                attachmentText,
+                nowIso,
+                hash,
+              ]
+            );
+          } else {
+            const dataJson = JSON.stringify({
+              pointOfContact: opportunity.pointOfContact,
+              resourceLinks: opportunity.resourceLinks,
+            });
+        await run(
+          db,
+          `UPDATE opportunities SET
+            solicitation_number = ?,
+            title = ?,
+            agency = ?,
+            posted_date = ?,
+            response_deadline = ?,
+            naics_code = ?,
+            set_aside = ?,
+            classification_code = ?,
+            ui_link = ?,
+            data_json = ?,
+            description_text = ?,
+            attachment_text = ?,
+            last_seen_at = ?,
+            hash = ?
+          WHERE notice_id = ?`,
+          [
+            opportunity.solicitationNumber,
+            opportunity.title,
+            opportunity.agencyPath,
+            opportunity.postedDate,
+            opportunity.responseDeadline,
+            opportunity.naicsCode,
+            opportunity.setAside || opportunity.setAsideCode,
+            opportunity.classificationCode,
+            opportunity.uiLink,
+            dataJson,
+            descriptionText,
+            attachmentText,
+            nowIso,
+            hash,
+            opportunity.noticeId,
+          ]
+        );
+      }
 }
 
 export async function getOpportunityState(db, noticeId) {

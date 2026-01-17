@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "bot:run": "node bot/cli.js run",
+    "bot:run": "node --expose-gc bot/cli.js run",
     "bot:dry-run": "node bot/cli.js run --dry-run",
     "bot:backfill": "node bot/cli.js backfill --days 7",
     "test": "node --test"
