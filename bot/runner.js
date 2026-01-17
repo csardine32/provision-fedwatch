@@ -201,13 +201,12 @@ export async function runOpportunityBot({
 } = {}) {
   const { config } = loadConfig(configPath);
   const logger = createLogger({ verbose });
-  logger.info("[debug] Bypassing database initialization for hang test.");
-  // const db = await initStorage(config.storage.sqlite_path);
+  const db = await initStorage(config.storage.sqlite_path);
 
-  // const summaries = [];
-  // for (const profile of config.profiles) {
-  //   const summary = await runProfile(profile, { db, logger, dryRun, backfillDays, fetchImpl, now });
-  //   summaries.push(summary);
-  // }
-  // return summaries;
+  const summaries = [];
+  for (const profile of config.profiles) {
+    const summary = await runProfile(profile, { db, logger, dryRun, backfillDays, fetchImpl, now });
+    summaries.push(summary);
+  }
+  return summaries;
 }
