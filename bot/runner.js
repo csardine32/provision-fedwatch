@@ -199,14 +199,26 @@ export async function runOpportunityBot({
   now = new Date(),
   verbose = false,
 } = {}) {
+  console.log("[runner] Starting runOpportunityBot.");
+  console.log("[runner] Calling loadConfig...");
   const { config } = loadConfig(configPath);
+  console.log("[runner] loadConfig returned. Config loaded: ", config.profiles.map(p => p.name).join(", "));
+  console.log("[runner] Calling createLogger...");
   const logger = createLogger({ verbose });
+  console.log("[runner] createLogger returned.");
+  console.log("[runner] Calling initStorage...");
   const db = await initStorage(config.storage.sqlite_path);
+  console.log("[runner] initStorage returned.");
 
   const summaries = [];
+  console.log("[runner] Starting profile loop.");
   for (const profile of config.profiles) {
+    console.log(`[runner] Running profile: ${profile.name}...`);
     const summary = await runProfile(profile, { db, logger, dryRun, backfillDays, fetchImpl, now });
     summaries.push(summary);
+    console.log(`[runner] Finished profile: ${profile.name}.`);
   }
+  console.log("[runner] Finished profile loop.");
+  console.log("[runner] runOpportunityBot completed.");
   return summaries;
 }
