@@ -81,7 +81,7 @@ export async function initStorage(dbPath) {
   return db;
 }
 
-export async function upsertOpportunity(db, opportunity, descriptionText, attachmentText, hash, nowIso) {
+export async function upsertOpportunity(db, opportunity, descriptionText, attachmentText, hash, nowIso, { logger }) {
   const existing = await get(db, "SELECT notice_id, hash FROM opportunities WHERE notice_id = ?", [
     opportunity.noticeId,
   ]);
