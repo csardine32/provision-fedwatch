@@ -199,16 +199,9 @@ export async function runOpportunityBot({
   now = new Date(),
   verbose = false,
 } = {}) {
-  console.log("[runner] Starting runOpportunityBot");
-  console.log("[runner] Calling loadConfig...");
   const { config } = loadConfig(configPath);
-  console.log("[runner] loadConfig returned.");
-  console.log("[runner] Calling createLogger...");
   const logger = createLogger({ verbose });
-  console.log("[runner] createLogger returned.");
-  console.log("[runner] Calling initStorage...");
   const db = await initStorage(config.storage.sqlite_path);
-  console.log("[runner] initStorage returned.");
 
   const summaries = [];
   for (const profile of config.profiles) {
