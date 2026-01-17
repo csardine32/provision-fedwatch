@@ -40,12 +40,7 @@ function all(db, sql, params = []) {
 }
 
 export async function initStorage(dbPath) {
-  console.log("[storage] Initializing database...");
-  console.log("[storage] Opening database at:", dbPath);
   const db = openDb(dbPath);
-  console.log("[storage] Database opened.");
-
-  console.log("[storage] Creating opportunities table...");
   await run(
     db,
     `CREATE TABLE IF NOT EXISTS opportunities (
@@ -72,9 +67,6 @@ export async function initStorage(dbPath) {
       last_alerted_hash TEXT
     )`
   );
-  console.log("[storage] Opportunities table created.");
-
-  console.log("[storage] Creating alerts table...");
   await run(
     db,
     `CREATE TABLE IF NOT EXISTS alerts (
@@ -86,9 +78,6 @@ export async function initStorage(dbPath) {
       created_at TEXT
     )`
   );
-  console.log("[storage] Alerts table created.");
-
-  console.log("[storage] Database initialization complete.");
   return db;
 }
 
