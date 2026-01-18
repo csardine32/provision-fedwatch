@@ -152,7 +152,7 @@ async function runProfile(profile, { db, logger, dryRun, backfillDays, fetchImpl
         }
 
         try {
-          const payload = buildSlackPayload({ opportunity: normalized, score });
+          const payload = buildSlackPayload({ opportunity: normalized, score, companyProfile: profile.company_profile });
           if (dryRun) {
             logger.info(`[${profile.name}] [dry-run] Would alert ${score.fit_label}: ${normalized.title}`);
           } else {

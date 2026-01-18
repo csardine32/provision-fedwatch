@@ -17,7 +17,7 @@ function formatField(title, value) {
   return { type: "mrkdwn", text: `*${title}*\n${value || "—"}` };
 }
 
-export function buildSlackPayload({ opportunity, score }) {
+export function buildSlackPayload({ opportunity, score, companyProfile }) {
   const headerText = formatFitHeader(score.fit_label, opportunity.title || "Untitled");
   
   const fields = [
@@ -85,7 +85,7 @@ ${links.join("\n")}` } });
   blocks.push({
     type: "context",
     elements: [
-      { type: "mrkdwn", text: `Scored for ProVision Systems / Provisions Unlimited (SDVOSB) | Fit Score: ${Math.round(score.fit_score)}` },
+      { type: "mrkdwn", text: `Scored for ${companyProfile} | Fit Score: ${Math.round(score.fit_score)}` },
     ],
   });
 
