@@ -95,6 +95,8 @@ async function runProfile(profile, { db, logger, dryRun, backfillDays, fetchImpl
       await upsertOpportunity(db, normalized, descriptionText, attachmentText, hash, nowIso, { logger });
       const state = await getOpportunityState(db, normalized.noticeId);
 
+      logger.debug(`[${profile.name}] Checking skip condition for ${normalized.noticeId}:\n  - New Hash: ${hash}\n  - DB Hash:  ${state?.hash}\n  - Scored at: ${state?.last_scored_at}`);
+
       if (state?.hash === hash && state?.last_scored_at) {
         summary.skipped += 1;
         continue;
