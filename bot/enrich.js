@@ -66,17 +66,30 @@ async function downloadAttachment(url, downloadPath, { fetchImpl, logger }) {
   }
 }
 
-function extractTextFromPdf(filePath, logger) {
-  return new Promise((resolve) => {
-    exec(`pdftotext -layout "${filePath}" -`, (error, stdout, stderr) => {
-      if (error) {
-        logger.warn(`pdftotext error for ${filePath}: ${stderr}`);
-        resolve("");
-      } else {
-        resolve(stdout);
-      }
+function extractTextFromFile(filePath, logger) {
+  const extension = path.extname(filePath).toLowerCase();
+  if (extension === ".pdf") {
+    return new Promise((resolve) => {
+      exec(`pdftotext -layout "${filePath}" -`, (error, stdout, stderr) => {
+        if (error) {
+          logger.warn(`pdftotext error for ${filePath}: ${stderr}`);
+          resolve("");
+        } else {
+          resolve(stdout);
+        }
+      });
     });
-  });
+  }
+  if (extension === ".txt") {
+    try {
+      return fs.readFileSync(filePath, "utf8");
+    } catch (error) {
+      logger.warn(`Error reading .txt file ${filePath}: ${error.message}`);
+      return "";
+    }
+  }
+  logger.warn(`Skipping text extraction for unsupported file type: ${filePath}`);
+  return "";
 }
 
 export async function fetchAttachmentText({
@@ -108,12 +121,7 @@ export async function fetchAttachmentText({
     return "";
   }
 
-  let text = "";
-  if (downloadedFile.toLowerCase().endsWith(".pdf")) {
-    text = await extractTextFromPdf(downloadedFile, logger);
-  } else {
-    logger.warn(`Skipping text extraction for non-PDF file: ${downloadedFile}`);
-  }
+  const text = await extractTextFromFile(downloadedFile, logger);
 
   fs.unlinkSync(downloadedFile); // Clean up the downloaded file
 
