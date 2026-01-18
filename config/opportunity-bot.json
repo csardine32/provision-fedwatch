@@ -35,7 +35,7 @@
       },
       "slack": {
         "bot_token_env": "SLACK_BOT_TOKEN",
-        "channel": "#test4-rmc-opportunities",
+        "channel": "#test5-rmc-opportunities",
         "post_not_a_fit": false
       },
       "alerting": {
@@ -83,7 +83,7 @@
       },
       "slack": {
         "bot_token_env": "SLACK_BOT_TOKEN_PROVISIONS",
-        "channel": "#test4-provisions-unlimited-opportunities",
+        "channel": "#test5-provisions-unlimited-opportunities",
         "post_not_a_fit": false
       },
       "alerting": {
