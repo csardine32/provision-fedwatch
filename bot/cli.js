@@ -3,7 +3,6 @@ import dotenv from "dotenv";
 import { runOpportunityBot } from "./runner.js";
 
 dotenv.config();
-process.env.SAM_FIXTURE_PATH = 'test/fixtures/sam.json';
 
 function parseArgs(argv) {
   const args = argv.slice(2);
