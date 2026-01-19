@@ -6,7 +6,7 @@
       "sam": {
         "api_key_env": "SAM_API_KEY",
         "base_url": "https://api.sam.gov",
-        "posted_lookback_days": 7,
+        "posted_lookback_days": 0,
         "limit": 100,
         "fetch_descriptions": false,
         "description_max_chars": 16000,
@@ -50,7 +50,7 @@
       "sam": {
         "api_key_env": "SAM_API_KEY",
         "base_url": "https://api.sam.gov",
-        "posted_lookback_days": 7,
+        "posted_lookback_days": 0,
         "limit": 100,
         "fetch_descriptions": false,
         "description_max_chars": 16000,

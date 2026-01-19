@@ -65,7 +65,7 @@ export function buildSlackPayload({ opportunity, score, companyProfile }) {
 
   if (score.attachment_summary) {
     blocks.push({ type: "section", text: { type: "mrkdwn", text: `*Attachment Summary:*
-${truncate(score.attachment_summary, 2500)}` } });
+${truncate(score.attachment_summary, 2000)}` } });
   }
 
   if (score.required_skillsets && score.required_skillsets.length > 0) {
