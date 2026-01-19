@@ -17,6 +17,12 @@ function formatField(title, value) {
   return { type: "mrkdwn", text: `*${title}*\n${value || "—"}` };
 }
 
+function truncate(str, maxLength) {
+  if (!str) return str;
+  if (str.length <= maxLength) return str;
+  return str.slice(0, maxLength) + "... (truncated)";
+}
+
 export function buildSlackPayload({ opportunity, score, companyProfile }) {
   const headerText = formatFitHeader(score.fit_label, opportunity.title || "Untitled");
   
@@ -52,10 +58,15 @@ export function buildSlackPayload({ opportunity, score, companyProfile }) {
 
   const blocks = [
     { type: "header", text: { type: "plain_text", text: headerText, emoji: true } },
-    { type: "section", text: { type: "mrkdwn", text: score.plain_english_summary || "No summary available." } },
+    { type: "section", text: { type: "mrkdwn", text: truncate(score.plain_english_summary, 2500) || "No summary available." } },
     { type: "divider" },
     { type: "section", fields },
   ];
+
+  if (score.attachment_summary) {
+    blocks.push({ type: "section", text: { type: "mrkdwn", text: `*Attachment Summary:*
+${truncate(score.attachment_summary, 2500)}` } });
+  }
 
   if (score.required_skillsets && score.required_skillsets.length > 0) {
     blocks.push({ type: "section", text: { type: "mrkdwn", text: `*Required Skillsets:*
@@ -63,18 +74,21 @@ export function buildSlackPayload({ opportunity, score, companyProfile }) {
   }
 
   if (score.reasons && score.reasons.length > 0) {
-    blocks.push({ type: "section", text: { type: "mrkdwn", text: `*Top Reasons:*
-• ${score.reasons.join("\n• ")}` } });
+    const reasonsText = `*Top Reasons:*
+• ${score.reasons.join("\n• ")}`;
+    blocks.push({ type: "section", text: { type: "mrkdwn", text: truncate(reasonsText, 2500) } });
   }
   
   if (score.risks && score.risks.length > 0) {
-    blocks.push({ type: "section", text: { type: "mrkdwn", text: `*Key Risks:*
-• ${score.risks.join("\n• ")}` } });
+    const risksText = `*Key Risks:*
+• ${score.risks.join("\n• ")}`;
+    blocks.push({ type: "section", text: { type: "mrkdwn", text: truncate(risksText, 2500) } });
   }
 
   if (score.must_check_items && score.must_check_items.length > 0) {
-    blocks.push({ type: "section", text: { type: "mrkdwn", text: `*Must Check Items:*
-• ${score.must_check_items.join("\n• ")}` } });
+    const mustCheckText = `*Must Check Items:*
+• ${score.must_check_items.join("\n• ")}`;
+    blocks.push({ type: "section", text: { type: "mrkdwn", text: truncate(mustCheckText, 2500) } });
   }
 
   if (links.length > 0) {
