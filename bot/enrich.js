@@ -40,9 +40,9 @@ function extractAttachmentLinks(opportunity) {
   const links = [];
   if (Array.isArray(opportunity.resourceLinks)) {
     for (const link of opportunity.resourceLinks) {
-      if (link && typeof link === 'string' && link.includes('?api_key=')) {
+      if (link && typeof link === 'string' && link.startsWith('http')) {
         links.push(link);
-      } else if (link?.url && typeof link.url === 'string' && link.url.includes('?api_key=')) {
+      } else if (link?.url && typeof link.url === 'string' && link.url.startsWith('http')) {
         links.push(link.url);
       }
     }
@@ -50,13 +50,32 @@ function extractAttachmentLinks(opportunity) {
   return links;
 }
 
-async function downloadAttachment(url, downloadPath, { fetchImpl, logger }) {
+async function downloadAttachment(url, { fetchImpl, logger, downloadDir }) {
   try {
     const resp = await fetchImpl(url);
     if (!resp.ok) {
       logger.warn(`Failed to download attachment ${url}: ${resp.status}`);
       return null;
     }
+
+    let filename = 'download';
+    const contentDisposition = resp.headers.get('Content-Disposition');
+    if (contentDisposition) {
+      const match = /filename\*?=(?:"([^"]+)"|([^;]+))/.exec(contentDisposition);
+      if (match) {
+        filename = match[1] || match[2]; // Use the first matching group (quoted or unquoted)
+      }
+    } else {
+      // Fallback to URL pathname if Content-Disposition is not present
+      const urlPathname = new URL(url).pathname;
+      const base = path.basename(urlPathname);
+      if (base && base.includes('.')) { // Simple check for an extension
+        filename = base;
+      }
+    } // Removed the else block for Content-Type inference as per instruction
+
+    const downloadPath = path.join(downloadDir, filename);
+
     const buffer = await resp.arrayBuffer();
     fs.writeFileSync(downloadPath, Buffer.from(buffer));
     return downloadPath;
@@ -66,30 +85,34 @@ async function downloadAttachment(url, downloadPath, { fetchImpl, logger }) {
   }
 }
 
-function extractTextFromFile(filePath, logger) {
+import pdf from 'pdf-parse';
+import WordExtractor from 'word-extractor';
+
+const wordExtractor = new WordExtractor();
+
+// ... (rest of the file remains the same until extractTextFromFile)
+
+async function extractTextFromFile(filePath, logger) {
   const extension = path.extname(filePath).toLowerCase();
-  if (extension === ".pdf") {
-    return new Promise((resolve) => {
-      exec(`pdftotext -layout "${filePath}" -`, (error, stdout, stderr) => {
-        if (error) {
-          logger.warn(`pdftotext error for ${filePath}: ${stderr}`);
-          resolve("");
-        } else {
-          resolve(stdout);
-        }
-      });
-    });
-  }
-  if (extension === ".txt") {
-    try {
-      return fs.readFileSync(filePath, "utf8");
-    } catch (error) {
-      logger.warn(`Error reading .txt file ${filePath}: ${error.message}`);
+
+  try {
+    if (extension === '.pdf') {
+      const dataBuffer = fs.readFileSync(filePath);
+      const data = await pdf(dataBuffer);
+      return data.text;
+    } else if (extension === '.doc' || extension === '.docx') {
+      const extracted = await wordExtractor.extract(filePath);
+      return extracted.getBody();
+    } else if (extension === '.txt') {
+      return fs.readFileSync(filePath, 'utf8');
+    } else {
+      logger.warn(`Skipping text extraction for unsupported file type: ${filePath}`);
       return "";
     }
+  } catch (error) {
+    logger.warn(`Error extracting text from ${filePath}: ${error.message}`);
+    return "";
   }
-  logger.warn(`Skipping text extraction for unsupported file type: ${filePath}`);
-  return "";
 }
 
 export async function fetchAttachmentText({
@@ -112,10 +135,8 @@ export async function fetchAttachmentText({
     url.searchParams.set("api_key", apiKey);
   }
 
-  const fileName = path.basename(url.pathname);
-  const downloadPath = path.join(downloadDir, fileName);
-
-  const downloadedFile = await downloadAttachment(url.toString(), downloadPath, { fetchImpl, logger });
+  // Pass downloadDir to downloadAttachment
+  const downloadedFile = await downloadAttachment(url.toString(), { fetchImpl, logger, downloadDir });
 
   if (!downloadedFile) {
     return "";

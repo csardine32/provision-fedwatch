@@ -6,7 +6,7 @@
       "sam": {
         "api_key_env": "SAM_API_KEY",
         "base_url": "https://api.sam.gov",
-        "posted_lookback_days": 2,
+        "posted_lookback_days": 7,
         "limit": 100,
         "fetch_descriptions": false,
         "description_max_chars": 16000,
@@ -35,7 +35,7 @@
       },
       "slack": {
         "bot_token_env": "SLACK_BOT_TOKEN",
-        "channel": "#test5-rmc-opportunities",
+        "channel": "#test6-rmc-opportunities",
         "post_not_a_fit": false
       },
       "alerting": {
@@ -50,7 +50,7 @@
       "sam": {
         "api_key_env": "SAM_API_KEY",
         "base_url": "https://api.sam.gov",
-        "posted_lookback_days": 2,
+        "posted_lookback_days": 7,
         "limit": 100,
         "fetch_descriptions": false,
         "description_max_chars": 16000,
@@ -83,7 +83,7 @@
       },
       "slack": {
         "bot_token_env": "SLACK_BOT_TOKEN_PROVISIONS",
-        "channel": "#test5-provisions-unlimited-opportunities",
+        "channel": "#test6-provisions-unlimited-opportunities",
         "post_not_a_fit": false
       },
       "alerting": {
