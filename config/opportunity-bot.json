@@ -27,8 +27,8 @@
         }
       },
       "scoring": {
-        "min_good_fit_score": 45,
-        "min_maybe_score": 25,
+        "min_good_fit_score": 50,
+        "min_maybe_score": 30,
         "ai_enabled": true,
         "ai_model": "gemini-pro-latest",
         "ai_timeout_seconds": 30,
