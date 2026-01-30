@@ -23,25 +23,14 @@
             541990,
             541330
           ],
-          "keywords": [
-            "payment integrity",
-            "fraud detection",
-            "data analytics",
-            "AI",
-            "artificial intelligence",
-            "machine learning",
-            "cybersecurity",
-            "database",
-            "system integration",
-            "enterprise software",
-            "healthcare claims",
-            "payment systems",
-            "CMS",
-            "oversight"
-          ],
+          "keywords": [],
           "setAsideCodes": [
             "SDVOSBC",
-            "SDVOSBS"
+            "SDVOSBS",
+            "SBA",
+            "SBP",
+            "8A",
+            "8AN"
           ],
           "minAmount": 25000,
           "agencies": ["VA", "HHS", "SBA", "GSA"]
