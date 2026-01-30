@@ -1,0 +1,364 @@
+{
+  "opportunitiesData": [
+    {
+      "noticeId": "TEST-PIVOT-001",
+      "title": "Payment Integrity Validation and Oversight Tool (PIVOT) Development",
+      "sol": "VA-26-00015670",
+      "dept": "VETERANS AFFAIRS, DEPARTMENT OF",
+      "subtier": "Veterans Health Administration",
+      "agency": "VA",
+      "office": "Office of Information Technology (OIT)",
+      "location": "Washington, DC",
+      "zip": "20420",
+      "classificationCode": "70",
+      "naicsCode": "541512",
+      "naicsDescription": "Computer Systems Design Services",
+      "typeOfSetAside": "SDVOSBC",
+      "typeOfSetAsideDescription": "Service-Disabled Veteran-Owned Small Business Set-Aside",
+      "popStreet": "810 Vermont Avenue NW",
+      "popCity": "Washington",
+      "popState": "DC",
+      "popZip": "20420",
+      "popCountry": "USA",
+      "active": "Yes",
+      "awardNumber": null,
+      "awardDate": null,
+      "awardDollars": null,
+      "description": "The Department of Veterans Affairs (VA) Office of Information Technology (OIT) requires a comprehensive Payment Integrity Validation and Oversight Tool (PIVOT) to detect, prevent, and monitor improper Community Care healthcare claims payments. The solution must provide advanced data analytics capabilities including pattern recognition, anomaly detection, machine learning algorithms, and real-time fraud detection. The system will process large volumes of healthcare claims data, identify suspicious payment patterns, and generate detailed oversight reports. Requirements include: data ingestion from multiple sources, rules engine configuration, dashboard development, API integrations, and comprehensive audit trails. The contractor must demonstrate experience in healthcare claims processing, fraud detection systems, database management, and enterprise software development. Security+ certification required for key personnel. The solution may be delivered as Software-as-a-Service (SaaS) or hosted within the VA Enterprise Cloud environment.",
+      "postedDate": "2024-12-15T00:00:00-05:00",
+      "type": "Solicitation",
+      "baseType": "Solicitation",
+      "archiveType": "auto15",
+      "archiveDate": "2025-02-15T23:59:59-05:00",
+      "typeOfSetAsideDescription": "Service-Disabled Veteran-Owned Small Business",
+      "typeOfSetAside": "SDVOSBC",
+      "responseDeadLine": "2025-01-30T16:00:00-05:00",
+      "naics": [
+        {
+          "code": "541512",
+          "description": "Computer Systems Design Services"
+        }
+      ],
+      "classificationCodes": [
+        {
+          "code": "70",
+          "description": "General Purpose ADP Equipment Software, Supplies and Support Equipment"
+        }
+      ],
+      "pointOfContact": [
+        {
+          "fax": null,
+          "type": "primary",
+          "email": "pivot.contracts@va.gov",
+          "phone": "202-555-1234",
+          "title": null,
+          "fullName": "Sarah Johnson, Contracting Officer"
+        }
+      ],
+      "placeOfPerformance": {
+        "city": {
+          "code": "52000",
+          "name": "Washington"
+        },
+        "state": {
+          "code": "DC",
+          "name": "District of Columbia"
+        },
+        "country": {
+          "code": "USA",
+          "name": "UNITED STATES"
+        }
+      },
+      "additionalInfoLink": "https://www.fbo.gov/notices/pivot-rfi-details",
+      "uiLink": "https://sam.gov/opp/pivot-test-001"
+    },
+    {
+      "noticeId": "TEST-VA-IT-002",
+      "title": "IT Infrastructure Assessment and Modernization Services",
+      "sol": "VA-IT-2024-0892",
+      "dept": "VETERANS AFFAIRS, DEPARTMENT OF",
+      "subtier": "Veterans Health Administration",
+      "agency": "VA",
+      "office": "Information Technology Services",
+      "location": "Philadelphia, PA",
+      "zip": "19104",
+      "classificationCode": "70",
+      "naicsCode": "541519",
+      "naicsDescription": "Other Computer Related Services",
+      "typeOfSetAside": "SDVOSBC",
+      "typeOfSetAsideDescription": "Service-Disabled Veteran-Owned Small Business Set-Aside",
+      "popStreet": "3900 Woodland Avenue",
+      "popCity": "Philadelphia",
+      "popState": "PA",
+      "popZip": "19104",
+      "popCountry": "USA",
+      "active": "Yes",
+      "awardNumber": null,
+      "awardDate": null,
+      "awardDollars": null,
+      "description": "The Philadelphia VA Medical Center requires comprehensive IT infrastructure assessment and modernization services. Scope includes network infrastructure evaluation, cybersecurity assessment, database optimization, system integration planning, and technology roadmap development. The contractor will assess current IT systems, identify security vulnerabilities, recommend modernization strategies, and develop implementation plans. Required capabilities include: enterprise network analysis, database management expertise, cybersecurity frameworks (NIST, FISMA), cloud migration planning, and project management. Personnel must hold Security+ certification or equivalent. Work involves both on-site assessment at the Philadelphia VAMC and remote analysis. The contractor should have experience with VA IT systems, healthcare technology environments, and federal compliance requirements.",
+      "postedDate": "2024-12-20T00:00:00-05:00",
+      "type": "Solicitation",
+      "baseType": "Solicitation",
+      "archiveType": "auto15",
+      "archiveDate": "2025-02-20T23:59:59-05:00",
+      "typeOfSetAsideDescription": "Service-Disabled Veteran-Owned Small Business",
+      "typeOfSetAside": "SDVOSBC",
+      "responseDeadLine": "2025-02-05T16:00:00-05:00",
+      "naics": [
+        {
+          "code": "541519",
+          "description": "Other Computer Related Services"
+        }
+      ],
+      "classificationCodes": [
+        {
+          "code": "70",
+          "description": "General Purpose ADP Equipment Software, Supplies and Support Equipment"
+        }
+      ],
+      "pointOfContact": [
+        {
+          "fax": null,
+          "type": "primary",
+          "email": "it.contracts@va.gov",
+          "phone": "215-555-5678",
+          "title": null,
+          "fullName": "Michael Chen, Contracting Officer"
+        }
+      ],
+      "placeOfPerformance": {
+        "city": {
+          "code": "60000",
+          "name": "Philadelphia"
+        },
+        "state": {
+          "code": "PA",
+          "name": "Pennsylvania"
+        },
+        "country": {
+          "code": "USA",
+          "name": "UNITED STATES"
+        }
+      },
+      "additionalInfoLink": "https://www.fbo.gov/notices/va-it-assessment",
+      "uiLink": "https://sam.gov/opp/va-it-test-002"
+    },
+    {
+      "noticeId": "TEST-HHS-DATA-003",
+      "title": "Healthcare Data Analytics Platform Development",
+      "sol": "HHS-CMS-2024-1156",
+      "dept": "HEALTH AND HUMAN SERVICES, DEPARTMENT OF",
+      "subtier": "Centers for Medicare and Medicaid Services",
+      "agency": "HHS",
+      "office": "Center for Medicare and Medicaid Innovation",
+      "location": "Baltimore, MD",
+      "zip": "21244",
+      "classificationCode": "70",
+      "naicsCode": "541511",
+      "naicsDescription": "Custom Computer Programming Services",
+      "typeOfSetAside": "SDVOSBC",
+      "typeOfSetAsideDescription": "Service-Disabled Veteran-Owned Small Business Set-Aside",
+      "popStreet": "7500 Security Boulevard",
+      "popCity": "Baltimore",
+      "popState": "MD",
+      "popZip": "21244",
+      "popCountry": "USA",
+      "active": "Yes",
+      "awardNumber": null,
+      "awardDate": null,
+      "awardDollars": null,
+      "description": "The Centers for Medicare and Medicaid Services (CMS) seeks a contractor to develop a comprehensive healthcare data analytics platform for Medicare claims analysis and trend identification. The platform will integrate multiple data sources, perform advanced analytics on claims patterns, and provide business intelligence dashboards for CMS analysts. Technical requirements include: big data processing capabilities, machine learning algorithms for predictive analytics, secure cloud-based architecture, API development for data integration, and compliance with HIPAA and federal security standards. The solution must process millions of Medicare claims records, identify fraud indicators, track healthcare utilization trends, and generate automated reports. Contractor must demonstrate expertise in healthcare data, database design, statistical analysis, and federal compliance requirements. Remote work acceptable with occasional travel to Baltimore CMS facilities.",
+      "postedDate": "2024-12-18T00:00:00-05:00",
+      "type": "Solicitation",
+      "baseType": "Solicitation",
+      "archiveType": "auto15",
+      "archiveDate": "2025-02-18T23:59:59-05:00",
+      "typeOfSetAsideDescription": "Service-Disabled Veteran-Owned Small Business",
+      "typeOfSetAside": "SDVOSBC",
+      "responseDeadLine": "2025-02-10T16:00:00-05:00",
+      "naics": [
+        {
+          "code": "541511",
+          "description": "Custom Computer Programming Services"
+        }
+      ],
+      "classificationCodes": [
+        {
+          "code": "70",
+          "description": "General Purpose ADP Equipment Software, Supplies and Support Equipment"
+        }
+      ],
+      "pointOfContact": [
+        {
+          "fax": null,
+          "type": "primary",
+          "email": "data.analytics@cms.hhs.gov",
+          "phone": "410-555-9012",
+          "title": null,
+          "fullName": "Jennifer Rodriguez, Contracting Specialist"
+        }
+      ],
+      "placeOfPerformance": {
+        "city": {
+          "code": "04000",
+          "name": "Baltimore"
+        },
+        "state": {
+          "code": "MD",
+          "name": "Maryland"
+        },
+        "country": {
+          "code": "USA",
+          "name": "UNITED STATES"
+        }
+      },
+      "additionalInfoLink": "https://www.fbo.gov/notices/cms-data-analytics",
+      "uiLink": "https://sam.gov/opp/hhs-data-test-003"
+    },
+    {
+      "noticeId": "TEST-SMALL-IT-004",
+      "title": "Help Desk Support Services",
+      "sol": "GSA-IT-2024-0445",
+      "dept": "GENERAL SERVICES ADMINISTRATION",
+      "subtier": "Federal Acquisition Service",
+      "agency": "GSA",
+      "office": "IT Services Division",
+      "location": "Newark, NJ",
+      "zip": "07102",
+      "classificationCode": "D316",
+      "naicsCode": "541519",
+      "naicsDescription": "Other Computer Related Services",
+      "typeOfSetAside": "SBA",
+      "typeOfSetAsideDescription": "Small Business Set-Aside",
+      "popStreet": "26 Federal Plaza",
+      "popCity": "Newark",
+      "popState": "NJ",
+      "popZip": "07102",
+      "popCountry": "USA",
+      "active": "Yes",
+      "awardNumber": null,
+      "awardDate": null,
+      "awardDollars": null,
+      "description": "GSA Region 2 requires IT help desk support services for the Newark Federal Building. Services include desktop support, software troubleshooting, hardware maintenance, user account management, and technical support for approximately 150 federal employees. Contractor will provide Tier 1 and Tier 2 help desk support, maintain IT equipment inventory, coordinate with GSA IT staff, and ensure compliance with federal IT security policies. Required capabilities include: Windows and Mac OS support, Office 365 administration, network troubleshooting, mobile device management, and customer service skills. On-site presence required Monday-Friday 7AM-5PM with remote support capabilities. Personnel must pass federal background investigation and hold current IT certifications (A+, Network+, or equivalent). Experience supporting federal agencies preferred.",
+      "postedDate": "2024-12-22T00:00:00-05:00",
+      "type": "Solicitation",
+      "baseType": "Solicitation",
+      "archiveType": "auto15",
+      "archiveDate": "2025-02-22T23:59:59-05:00",
+      "typeOfSetAsideDescription": "Small Business Set-Aside",
+      "typeOfSetAside": "SBA",
+      "responseDeadLine": "2025-01-25T16:00:00-05:00",
+      "naics": [
+        {
+          "code": "541519",
+          "description": "Other Computer Related Services"
+        }
+      ],
+      "classificationCodes": [
+        {
+          "code": "D316",
+          "description": "ADP Support Services"
+        }
+      ],
+      "pointOfContact": [
+        {
+          "fax": null,
+          "type": "primary",
+          "email": "it.support@gsa.gov",
+          "phone": "973-555-3456",
+          "title": null,
+          "fullName": "Robert Kim, Contracting Officer"
+        }
+      ],
+      "placeOfPerformance": {
+        "city": {
+          "code": "56000",
+          "name": "Newark"
+        },
+        "state": {
+          "code": "NJ",
+          "name": "New Jersey"
+        },
+        "country": {
+          "code": "USA",
+          "name": "UNITED STATES"
+        }
+      },
+      "additionalInfoLink": "https://www.fbo.gov/notices/gsa-helpdesk",
+      "uiLink": "https://sam.gov/opp/gsa-help-test-004"
+    },
+    {
+      "noticeId": "TEST-CONSTRUCTION-005",
+      "title": "Medical Center Roof Replacement and HVAC Upgrade",
+      "sol": "VA-CON-2024-0778",
+      "dept": "VETERANS AFFAIRS, DEPARTMENT OF",
+      "subtier": "Veterans Health Administration",
+      "agency": "VA",
+      "office": "Engineering Services",
+      "location": "Albany, NY",
+      "zip": "12208",
+      "classificationCode": "Z1BC",
+      "naicsCode": "236220",
+      "naicsDescription": "Commercial and Institutional Building Construction",
+      "typeOfSetAside": "SDVOSBC",
+      "typeOfSetAsideDescription": "Service-Disabled Veteran-Owned Small Business Set-Aside",
+      "popStreet": "113 Holland Avenue",
+      "popCity": "Albany",
+      "popState": "NY",
+      "popZip": "12208",
+      "popCountry": "USA",
+      "active": "Yes",
+      "awardNumber": null,
+      "awardDate": null,
+      "awardDollars": null,
+      "description": "The Albany VA Medical Center requires roof replacement and HVAC system upgrades for Building 7. The project includes complete roof membrane replacement, gutter and downspout installation, HVAC equipment replacement, ductwork modifications, and mechanical system commissioning. Work must be performed in an active healthcare facility with minimal disruption to patient care operations. Contractor must coordinate with medical center staff, follow VA construction standards, maintain appropriate insurance coverage, and comply with OSHA safety requirements. Required capabilities include: commercial roofing expertise, HVAC system installation, healthcare facility construction experience, and project management. All personnel must pass federal background checks and complete VA-specific training. Work scheduled for completion during summer months with weather-dependent timeline. Prevailing wage rates apply.",
+      "postedDate": "2024-12-19T00:00:00-05:00",
+      "type": "Solicitation",
+      "baseType": "Solicitation",
+      "archiveType": "auto15",
+      "archiveDate": "2025-02-19T23:59:59-05:00",
+      "typeOfSetAsideDescription": "Service-Disabled Veteran-Owned Small Business",
+      "typeOfSetAside": "SDVOSBC",
+      "responseDeadLine": "2025-02-01T16:00:00-05:00",
+      "naics": [
+        {
+          "code": "236220",
+          "description": "Commercial and Institutional Building Construction"
+        }
+      ],
+      "classificationCodes": [
+        {
+          "code": "Z1BC",
+          "description": "Maintenance, Repair, and Rebuilding of Equipment-Construction"
+        }
+      ],
+      "pointOfContact": [
+        {
+          "fax": null,
+          "type": "primary",
+          "email": "construction.contracts@va.gov",
+          "phone": "518-555-7890",
+          "title": null,
+          "fullName": "Patricia Williams, Contracting Officer"
+        }
+      ],
+      "placeOfPerformance": {
+        "city": {
+          "code": "01000",
+          "name": "Albany"
+        },
+        "state": {
+          "code": "NY",
+          "name": "New York"
+        },
+        "country": {
+          "code": "USA",
+          "name": "UNITED STATES"
+        }
+      },
+      "additionalInfoLink": "https://www.fbo.gov/notices/va-construction",
+      "uiLink": "https://sam.gov/opp/va-construction-test-005"
+    }
+  ]
+}

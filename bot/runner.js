@@ -26,7 +26,7 @@ async function runProfile(profile, { db, logger, dryRun, backfillDays, fetchImpl
 
   const samApiKey = requireEnv(profile.sam.api_key_env);
 
-  const { opportunities } = await fetchSamOpportunities({
+  let { opportunities } = await fetchSamOpportunities({
     apiKey: samApiKey,
     baseUrl: profile.sam.base_url,
     postedFrom,
@@ -39,6 +39,15 @@ async function runProfile(profile, { db, logger, dryRun, backfillDays, fetchImpl
   });
 
   logger.info(`[${profile.name}] Fetched ${opportunities.length} opportunities from SAM.gov.`);
+
+  if (Array.isArray(profile.sam.filters?.setAsideCodes) && profile.sam.filters.setAsideCodes.length > 0) {
+    const originalCount = opportunities.length;
+    opportunities = opportunities.filter(opp => {
+      const normalized = normalizeOpportunity(opp);
+      return profile.sam.filters.setAsideCodes.includes(normalized.setAsideCode);
+    });
+    logger.info(`[${profile.name}] Filtered ${originalCount} opportunities down to ${opportunities.length} based on setAsideCodes.`);
+  }
 
   const summary = {
     profile: profile.name,
@@ -200,6 +209,7 @@ export async function runOpportunityBot({
   fetchImpl = fetch,
   now = new Date(),
   verbose = false,
+  profileNames = [],
 } = {}) {
   console.log("[runner] Starting runOpportunityBot.");
   console.log("[runner] Calling loadConfig...");
@@ -213,8 +223,12 @@ export async function runOpportunityBot({
   console.log("[runner] initStorage returned.");
 
   const summaries = [];
-  console.log("[runner] Starting profile loop.");
-  for (const profile of config.profiles) {
+  const profilesToRun = profileNames.length > 0
+    ? config.profiles.filter(p => profileNames.includes(p.name))
+    : config.profiles;
+
+  console.log(`[runner] Starting profile loop for: ${profilesToRun.map(p => p.name).join(", ")}`);
+  for (const profile of profilesToRun) {
     console.log(`[runner] Running profile: ${profile.name}...`);
     const summary = await runProfile(profile, { db, logger, dryRun, backfillDays, fetchImpl, now });
     summaries.push(summary);

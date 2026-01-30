@@ -25,15 +25,17 @@ async function main() {
   const dryRun = Boolean(flags.get("dry-run"));
   const verbose = Boolean(flags.get("verbose"));
   const configPath = flags.get("config") || null;
+  const profiles = flags.get("profiles") || "";
+  const profileNames = profiles ? profiles.split(",").map(s => s.trim()) : [];
 
   if (command === "run") {
-    await runOpportunityBot({ dryRun, configPath, verbose });
+    await runOpportunityBot({ dryRun, configPath, verbose, profileNames });
     return;
   }
 
   if (command === "backfill") {
     const days = Number(flags.get("days") ?? 7);
-    await runOpportunityBot({ dryRun, configPath, backfillDays: days, verbose });
+    await runOpportunityBot({ dryRun, configPath, backfillDays: days, verbose, profileNames });
     return;
   }
 
