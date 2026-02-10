@@ -244,14 +244,14 @@ test("Pipeline dry-run stores opportunities and scores", async () => {
     },
   ]);
 
-  const summary = await runOpportunityBot({
+  const summaries = await runOpportunityBot({
     dryRun: true,
     configPath: fixtureConfig,
     fetchImpl,
     now: new Date("2024-02-01T00:00:00Z"),
   });
 
-  assert.equal(summary.total, 1);
+  assert.equal(summaries[0].total, 1);
   const db = await initStorage(dbPath);
   const rows = await listOpportunities(db);
   assert.equal(rows.length, 1);
@@ -287,14 +287,14 @@ test("Description fetch cap limits calls per run", async () => {
     },
   ]);
 
-  const summary = await runOpportunityBot({
+  const summaries = await runOpportunityBot({
     dryRun: true,
     configPath: fixtureConfig,
     fetchImpl,
     now: new Date("2024-02-01T00:00:00Z"),
   });
 
-  assert.equal(summary.total, 3);
+  assert.equal(summaries[0].total, 3);
   assert.equal(descriptionCalls, 1);
 });
 

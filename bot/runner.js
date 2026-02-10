@@ -9,8 +9,10 @@ import {
   scoreToLabel,
   shouldAlert,
   buildFallbackScore,
+  blendScores,
 } from "./scoring.js";
 import { scoreWithAi } from "./ai.js";
+import { checkEligibility } from "./eligibility.js";
 import { buildSlackPayload, postSlackAlert, postSlackMessage } from "./slack.js";
 import { initStorage, upsertOpportunity, getOpportunityState, saveScore, saveAlert } from "./storage.js";
 import { formatDateMMDDYYYY } from "./utils.js";
@@ -55,11 +57,14 @@ async function runProfile(profile, { db, logger, dryRun, backfillDays, fetchImpl
     scored: 0,
     alerted: 0,
     skipped: 0,
+    disqualified: 0,
+    aiCalls: 0,
+    aiFallbacks: 0,
   };
   let descriptionFetches = 0;
   let capLogged = false;
   const descriptionCap = profile.sam.max_descriptions_per_run ?? 10;
-  let goodFitAlertsSent = 0; // Initialize counter for GOOD_FIT alerts
+  let goodFitAlertsSent = 0;
   const batchSize = 10;
 
   for (let i = 0; i < opportunities.length; i += batchSize) {
@@ -115,7 +120,45 @@ async function runProfile(profile, { db, logger, dryRun, backfillDays, fetchImpl
         minGood: profile.scoring.min_good_fit_score ?? 75,
         minMaybe: profile.scoring.min_maybe_score ?? 55,
       };
-      const pre = deterministicScore(normalized, descriptionText);
+
+      // Eligibility gate — check before spending AI calls
+      const eligibility = checkEligibility(
+        normalized,
+        descriptionText,
+        profile.company_eligibility ?? {},
+      );
+
+      if (!eligibility.isEligible) {
+        const disqualifyReasons = eligibility.issues
+          .filter((i) => i.severity === "disqualifying")
+          .map((i) => i.message);
+        const score = {
+          is_relevant: false,
+          plain_english_summary: "Auto-disqualified by eligibility gate.",
+          required_skillsets: [],
+          fit_label: "NOT_A_FIT",
+          fit_score: 0,
+          reasons: disqualifyReasons,
+          risks: disqualifyReasons,
+          key_dates: { due_date: "", other_dates: [] },
+          attachment_summary: "",
+          must_check_items: [],
+        };
+        await saveScore(db, normalized.noticeId, score, nowIso);
+        summary.scored += 1;
+        summary.disqualified += 1;
+        logger.info(`[${profile.name}] Disqualified: ${normalized.title} — ${disqualifyReasons.join("; ")}`);
+        continue;
+      }
+
+      // Pass config keywords to deterministic scoring
+      const configKeywords = (profile.scoring.positive_keywords || profile.scoring.negative_keywords)
+        ? {
+            positive: profile.scoring.positive_keywords,
+            negative: profile.scoring.negative_keywords,
+          }
+        : undefined;
+      const pre = deterministicScore(normalized, descriptionText, configKeywords);
       let aiScore = null;
 
       if (profile.scoring.ai_enabled) {
@@ -128,6 +171,7 @@ async function runProfile(profile, { db, logger, dryRun, backfillDays, fetchImpl
         }
 
         if (aiKey) {
+          summary.aiCalls += 1;
           aiScore = await scoreWithAi({
             apiKey: aiKey,
             model: profile.scoring.ai_model,
@@ -137,15 +181,13 @@ async function runProfile(profile, { db, logger, dryRun, backfillDays, fetchImpl
             companyProfile: profile.company_profile,
             logger,
           });
+          if (!aiScore) summary.aiFallbacks += 1;
         } else {
           logger.warn(`[${profile.name}] ${aiProvider.toUpperCase()}_API_KEY not set; AI scoring disabled.`);
         }
       }
 
-      const score = aiScore ?? buildFallbackScore(pre.preScore, thresholds);
-      if (!aiScore) {
-        score.fit_label = scoreToLabel(score.fit_score, thresholds);
-      }
+      const score = blendScores(pre, aiScore, eligibility, thresholds);
 
       await saveScore(db, normalized.noticeId, score, nowIso);
       summary.scored += 1;
@@ -197,7 +239,7 @@ async function runProfile(profile, { db, logger, dryRun, backfillDays, fetchImpl
   }
 
   logger.info(
-    `[${profile.name}] Summary: total=${summary.total} scored=${summary.scored} alerted=${summary.alerted} skipped=${summary.skipped}`
+    `[${profile.name}] Summary: total=${summary.total} scored=${summary.scored} alerted=${summary.alerted} skipped=${summary.skipped} disqualified=${summary.disqualified} aiCalls=${summary.aiCalls} aiFallbacks=${summary.aiFallbacks}`
   );
   return summary;
 }
@@ -234,7 +276,18 @@ export async function runOpportunityBot({
     summaries.push(summary);
     console.log(`[runner] Finished profile: ${profile.name}.`);
   }
-  console.log("[runner] Finished profile loop.");
-  console.log("[runner] runOpportunityBot completed.");
+  // Aggregate API usage across all profiles
+  const totals = summaries.reduce((acc, s) => {
+    acc.aiCalls += s.aiCalls || 0;
+    acc.aiFallbacks += s.aiFallbacks || 0;
+    acc.disqualified += s.disqualified || 0;
+    acc.scored += s.scored || 0;
+    acc.alerted += s.alerted || 0;
+    return acc;
+  }, { aiCalls: 0, aiFallbacks: 0, disqualified: 0, scored: 0, alerted: 0 });
+
+  const savedCalls = totals.disqualified;
+  logger.info(`[runner] Run complete — Gemini API calls: ${totals.aiCalls} (${totals.aiFallbacks} failed) | Disqualified before AI: ${savedCalls} | Scored: ${totals.scored} | Alerted: ${totals.alerted}`);
+
   return summaries;
 }

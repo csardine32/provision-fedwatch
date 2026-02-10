@@ -1,4 +1,4 @@
-import { clampText } from "./utils.js";
+import { clampText, sleep } from "./utils.js";
 import fs from "fs";
 import path from "path";
 import { exec } from "child_process";
@@ -7,6 +7,41 @@ function resolveDescriptionUrl(opportunity) {
   const candidate = opportunity.descriptionLink;
   if (typeof candidate === "string" && candidate.startsWith("http")) return candidate;
   return "";
+}
+
+async function fetchDescriptionWithRetry(url, { fetchImpl, logger, maxAttempts = 4 }) {
+  let attempt = 0;
+  while (attempt < maxAttempts) {
+    attempt += 1;
+    try {
+      const resp = await fetchImpl(url, { method: "GET" });
+      if (resp.status < 500) {
+        return resp; // Success or client error (don't retry client errors)
+      }
+      // Retry on 5xx errors
+      const wait = Math.min(2000 * attempt, 8000);
+      logger.warn({
+        message: "Description fetch failed, retrying...",
+        attempt,
+        maxAttempts,
+        status: resp.status,
+        url,
+      });
+      await sleep(wait);
+    } catch (error) {
+      const wait = Math.min(2000 * attempt, 8000);
+      logger.warn({
+        message: "Description fetch failed, retrying...",
+        attempt,
+        maxAttempts,
+        error: error.message,
+        url,
+      });
+      await sleep(wait);
+    }
+  }
+  // Last attempt
+  return fetchImpl(url, { method: "GET" });
 }
 
 export async function fetchDescriptionText({
@@ -23,15 +58,19 @@ export async function fetchDescriptionText({
     descriptionUrl.searchParams.set("api_key", apiKey);
   }
   try {
-    const resp = await fetchImpl(descriptionUrl.toString(), { method: "GET" });
+    const resp = await fetchDescriptionWithRetry(descriptionUrl.toString(), {
+      fetchImpl,
+      logger,
+      maxAttempts: 4
+    });
     if (!resp.ok) {
-      logger.warn(`Description fetch failed ${resp.status} for ${opportunity.noticeId}`);
+      logger.error(`Description fetch failed after retries ${resp.status} for ${opportunity.noticeId}`);
       return "";
     }
     const text = await resp.text();
     return clampText(text, maxChars);
   } catch (error) {
-    logger.warn(`Description fetch error for ${opportunity.noticeId}`, error.message);
+    logger.error(`Description fetch error after retries for ${opportunity.noticeId}`, error.message);
     return "";
   }
 }

@@ -24,7 +24,8 @@ function truncate(str, maxLength) {
 }
 
 export function buildSlackPayload({ opportunity, score, companyProfile }) {
-  const headerText = formatFitHeader(score.fit_label, opportunity.title || "Untitled");
+  const rawHeader = formatFitHeader(score.fit_label, opportunity.title || "Untitled");
+  const headerText = rawHeader.length > 150 ? rawHeader.slice(0, 147) + "..." : rawHeader;
   
   const fields = [
     formatField("Agency", opportunity.agencyPath),

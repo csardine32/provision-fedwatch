@@ -4,160 +4,127 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Provision-FedWatch is a revolutionary Node.js system that implements a "market-domination" strategy for government contracting. Instead of focusing on traditional "IT services only," it scans opportunities across ALL industries to identify contracts where technology and automation create competitive advantages. The system uses AI to evaluate automation potential and only alerts on opportunities where tech skills provide unfair advantages over traditional competitors.
+Provision-FedWatch is a Node.js CLI tool that scans SAM.gov for federal contracting opportunities, scores them using a hybrid deterministic + AI system, and sends alerts to Slack. It targets all industries (not just IT) looking for opportunities where technology/automation creates competitive advantages. The company is an SDVOSB (Service-Disabled Veteran-Owned Small Business).
 
-**Strategic Philosophy**: "Bring Silicon Valley tech innovation to traditional government contracting sectors"
+## Commands
 
-## Market-Domination Strategy
-
-### Core Approach
-- **Cast the widest net**: Scan 100+ opportunities daily across all industries
-- **AI-powered filtering**: Evaluate automation potential rather than industry classification
-- **Target inefficiencies**: Find manual processes that can be automated/digitized
-- **Scale advantages**: Build tech solutions that traditional competitors can't match
-
-### Target Opportunity Types
-- Hardware procurement with supply chain optimization potential
-- Compliance processes that can be automated
-- Vendor management requiring digital platforms
-- Quality assurance with tracking/reporting automation
-- Logistics coordination with scheduling optimization
-- Manual paperwork processes ripe for digitization
-
-## Common Development Commands
-
-### Bot Operations
 ```bash
-# Development and testing
-npm run bot:dry-run                              # Safe test run without Slack posting
-npm run bot:run                                  # Live execution with garbage collection
-npm run bot:backfill                             # Backfill 7 days of historical data
+# Run the scanner
+npm run bot:run                    # Live run with --expose-gc
+npm run bot:dry-run                # Test run, no Slack posting
+npm run bot:backfill               # Backfill 7 days of history
 
-# CLI variants with options
-node bot/cli.js run --dry-run --verbose          # Verbose dry run for debugging
-node bot/cli.js run --profiles "Tech-Enhanced Market Opportunities"  # Run specific profile
-node bot/cli.js backfill --days N                # Backfill N days of history
-node bot/cli.js run --config <path>              # Use custom config file
+# CLI with options
+node bot/cli.js run --dry-run --verbose
+node bot/cli.js run --profiles "Tech-Enhanced Market Opportunities"
+node bot/cli.js backfill --days 14
+
+# Intelligence/query commands (read-only, no API calls)
+node bot/cli.js query --min-score 50 --agency DOD --limit 10
+node bot/cli.js show <notice_id>
+node bot/cli.js compare <id1> <id2>
+node bot/cli.js pipeline
+node bot/cli.js stats --group-by agency
+
+# Lifecycle management
+node bot/cli.js status <notice_id> <status>
+node bot/cli.js note <notice_id> "some note"
+node bot/cli.js tag <notice_id> capability "cloud migration"
+node bot/cli.js outcome <notice_id> --result won --amount 150000
+
+# Tests
+npm test                           # Node.js built-in test runner (node --test)
+node --test test/intelligence.test.js  # Run a single test file
+SAM_FIXTURE_PATH=test/fixtures/sam.json npm run bot:dry-run  # Run with fixtures, no API calls
 ```
 
-### Testing
-```bash
-npm test                                         # Run Node.js built-in test suite
-SAM_FIXTURE_PATH=test/fixtures/sam.json npm run bot:dry-run  # Test with fixtures (no API calls)
-./scripts/smoke_scorer.sh                        # Quick validation test
+## Architecture
+
+**ES Modules project** (`"type": "module"` in package.json). No build step; runs directly with Node.js v22+ (managed via nvm).
+
+### Scoring Pipeline
+
+The scoring pipeline has three stages with an eligibility pre-gate:
+
+```
+cli.js → runner.js (orchestration, iterates profiles)
+  → sam_client.js (fetch from SAM.gov API, pagination, fixture mode)
+  → normalizer.js (normalize API response)
+  → enrich.js (fetch descriptions, parse PDF/DOCX attachments)
+  → eligibility.js (pre-AI gate: 8(a), clearance, sole source checks)
+      ↳ disqualifying → score 0, skip AI call
+      ↳ warnings → passed through as penalty to blendScores
+  → scoring.js deterministicScore() (base 50, +5 per positive keyword, -15 per negative)
+  → ai.js scoreWithAi() (Google Gemini via @google/generative-ai SDK)
+  → scoring.js blendScores() (30% deterministic + 70% AI, -15 per eligibility warning, cap AI at 40 if deterministic < 25)
+  → storage.js (SQLite upsert with dedup via content hash)
+  → slack.js (Block Kit alert if shouldAlert() passes)
 ```
 
-### System Requirements
-- **Node.js**: v18+ required (uses ES modules)
-- **External Tools**:
-  - `poppler` for PDF extraction (`brew install poppler` on macOS)
-  - `docx2txt` for DOCX extraction (`brew install docx2txt` on macOS)
+### Key Modules
 
-## Architecture Overview
+- **`bot/runner.js`** — Main orchestration. Multi-profile: iterates `config.profiles[]`, returns `summaries[]` (array of per-profile summary objects). Processes opportunities in batches of 10 with 2s delays and optional GC. Caps description fetches per run (`max_descriptions_per_run`).
+- **`bot/storage.js`** — SQLite wrapper. Schema auto-migrates using `safeAddColumn()`. All DB operations are promise-wrapped callbacks over the `sqlite3` driver. Also contains query/stats functions used by intelligence.js.
+- **`bot/scoring.js`** — `deterministicScore()` accepts optional `{ positive, negative }` keywords from config profile, falls back to hardcoded lists. `blendScores()` merges deterministic + AI + eligibility penalties. `shouldAlert()` checks hash-based deduplication.
+- **`bot/ai.js`** — Google Gemini integration via `@google/generative-ai` SDK (not OpenAI-style fetch). Retries on 429/5xx with exponential backoff. Returns null on non-retryable errors (deterministic fallback used). `buildPrompt()` is profile-agnostic — the `company_profile` text steers AI scoring direction.
+- **`bot/eligibility.js`** — Pre-AI eligibility gate. Checks 8(a) set-aside mismatch, security clearance requirements, and sole-source patterns. Returns `{ isEligible, issues[] }` with severity `disqualifying` or `warning`.
+- **`bot/intelligence.js`** — CLI query interface for the local SQLite database. Handles `query`, `show`, `compare`, `pipeline`, `stats`, and lifecycle commands. Uses ANSI color codes for terminal formatting.
+- **`bot/enrich.js`** — Fetches description text from SAM.gov API (clamped to 16K chars) and parses PDF/DOCX attachments (clamped to 32K chars). Requires `poppler` and `docx2txt` system tools via Homebrew.
+- **`bot/sam_client.js`** — SAM.gov API client with retry logic, pagination, multiple NAICS code support, and fixture mode via `SAM_FIXTURE_PATH`.
 
-### Core Data Flow
-```
-CLI Entry → Load Config → Market-Wide Scan:
-  SAM.gov API (All Industries) → Normalize → Store → Enrich → AI Evaluation → Automation Scoring → Slack Alerts
-```
+### Configuration
 
-### Key Components
-- **`bot/cli.js`**: Command-line entry point with argument parsing
-- **`bot/runner.js`**: Main orchestration logic for cross-industry scanning
-- **`bot/sam_client.js`**: SAM.gov API client with high-volume capability
-- **`bot/storage.js`**: SQLite wrapper for opportunity tracking and deduplication
-- **`bot/scoring.js`**: Hybrid scoring system focused on automation potential
-- **`bot/ai.js`**: Google Gemini integration for automation assessment
-- **`bot/slack.js`**: Rich Slack alerts with AI analysis and automation insights
-- **`bot/enrich.js`**: Document processing for comprehensive opportunity analysis
+`config/opportunity-bot.json` has a `profiles[]` array (each profile has its own SAM filters, scoring keywords/thresholds, and Slack channel). Current profiles:
 
-### Market-Domination Configuration
-Single profile in `config/opportunity-bot.json` configured for maximum coverage:
+1. **Tech-Enhanced Market Opportunities** (primary) — All industries, $25K–$5M, GOOD_FIT ≥70 / MAYBE ≥45
+2. **High-Value IT (PIVOT-type)** — IT/cyber/fraud/AI focus, $100K–$50M, GOOD_FIT ≥70 / MAYBE ≥50
+3. **COTS/SaaS Integration** — SaaS/FedRAMP/managed services, $50K–$25M, GOOD_FIT ≥60 / MAYBE ≥40
+4. **Facilities & Logistics (NJ/NY/PA)** — Janitorial/grounds/warehouse/logistics, $25K–$5M, GOOD_FIT ≥65 / MAYBE ≥40
 
-**Scanning Strategy**:
-- **No NAICS filtering**: Scan across all industries and sectors
-- **Set-aside focused**: SDVOSB + Small Business + 8(a) opportunities
-- **Dollar range**: $25K-$5M (sweet spot for tech advantages)
-- **High volume**: 50 opportunities per run, 2 pages, 10 descriptions
+Set-asides: SDVOSBC, SDVOSBS, SBA, SBP, 8A, 8AN. Select profiles at runtime with `--profiles`.
 
-**AI-Enhanced Scoring**:
-- **Automation Keywords**: Focus on "manual processes," "spreadsheets," "coordination," "tracking," "compliance"
-- **Tech Advantage Signals**: "efficiency," "streamline," "modernization," "digitization"
-- **Competitive Moats**: Identify where tech creates unfair advantages
+### Database
 
-## Scoring System Revolution
+SQLite at `.data/opportunity_bot.sqlite` (auto-created). Key tables:
+- **opportunities** — Primary table with scoring fields (`last_score`, `last_fit_label`, `hash`), AI analysis fields (`ai_summary`, `ai_reasons_json`, etc.), and lifecycle fields (`pursuit_status`, `priority`, `notes`)
+- **alerts** — Deduplication tracking for Slack alerts
+- **pursuit_events** — Append-only event log for status changes
+- **outcomes** — Win/loss records with debrief data
+- **tags** — Flexible categorization (categories: capability, technology, industry, strategy, custom)
 
-### AI-First Automation Assessment
-1. **Automation Potential**: AI evaluates opportunities for process improvement potential
-2. **Tech Advantage**: Identifies where IT skills create competitive moats
-3. **Market Sophistication**: Assesses competitor technical maturity
-4. **Scalability**: Evaluates potential for building reusable tech solutions
+Pursuit statuses: `discovered → reviewing → interested → pursuing → submitted → won/lost/no_bid/expired`
 
-### Scoring Criteria (0-100 scale)
-- **50+ (GOOD_FIT)**: High automation potential, clear tech advantages
-- **30-49 (MAYBE)**: Moderate automation opportunities worth reviewing
-- **<30 (NOT_A_FIT)**: Limited tech advantage over traditional competitors
+### Deduplication
 
-### AI Analysis Output
-Rich structured analysis including:
-- **Automation opportunities**: Specific processes that can be improved
-- **Required skillsets**: Technical capabilities needed
-- **Competitive advantages**: How tech creates differentiation
-- **Implementation approach**: Recommended automation strategy
-- **Risk assessment**: Potential challenges and mitigation
+Content hash built from opportunity fields + first 4000 chars of description/attachment text. If hash matches and opportunity was already scored, it's skipped. Alert hash prevents duplicate Slack messages.
+
+### Testing Patterns
+
+Tests use Node.js built-in test runner (`node:test` + `node:assert/strict`). Key patterns:
+- **Mock fetch**: `buildMockFetch(routes)` with route matching and `jsonResponse()`/`textResponse()` helpers (in `test/opportunity_bot.test.js`)
+- **Temp databases**: Tests create isolated SQLite DBs (e.g., `.data/test-intelligence.sqlite`) and clean up before/after
+- **Factory functions**: `makeOpp()` for creating test opportunity objects with overrides
+- **Fixture config**: `test/fixtures/opportunity-bot.json` and `test/fixtures/opportunity-bot-cap.json` — must use `profiles[]` wrapper format matching production config structure
+- **Dependency injection**: Modules accept `fetchImpl` and `logger` parameters for testability
+- **`runOpportunityBot()` returns an array** of per-profile summary objects, not a single summary
 
 ## Environment Variables
-Required runtime environment variables:
+
 ```bash
-SAM_API_KEY                    # SAM.gov API key (high quota recommended)
-GEMINI_API_KEY                 # Google Generative AI key (required for automation analysis)
-SLACK_BOT_TOKEN                # Slack bot token for alerts
-SLACK_BOT_TOKEN_PROVISIONS     # Alternative workspace token
-SLACK_BOT_TOKEN_STATUS         # Status notification token
+SAM_API_KEY                    # SAM.gov API access
+GEMINI_API_KEY                 # Google Gemini (default AI provider)
+SLACK_BOT_TOKEN                # Primary Slack workspace
+SLACK_BOT_TOKEN_PROVISIONS     # Alternative workspace
+SLACK_BOT_TOKEN_STATUS         # Status notifications
+AI_PROVIDER                    # "gemini" (default) or "openai"
+OPENAI_API_KEY                 # Required if AI_PROVIDER=openai
+SAM_FIXTURE_PATH               # Path to fixture JSON for testing without API calls
 ```
 
-## Cost Optimization Results
-**Massive cost reduction achieved**:
-- **Before**: $250/month (excessive AI usage, narrow focus)
-- **After**: ~$25/month (smart filtering, targeted AI analysis)
-- **90% cost savings** while expanding coverage 20x
+## Development Constraints
 
-**Efficiency improvements**:
-- Pre-filter with deterministic scoring before AI analysis
-- Smart batching and API quota management
-- Reduced attachment processing for non-relevant opportunities
-
-## Database Schema
-SQLite database auto-created at `./.data/opportunity_bot.sqlite`:
-- **opportunities**: Cross-industry opportunity data with automation scoring
-- **alerts**: Deduplication and alert history tracking
-- **Market intelligence**: Historical data for pattern recognition
-
-## Testing Strategy
-- **Unit Tests**: Node.js built-in `node:test` framework in `test/opportunity_bot.test.js`
-- **Cross-Industry Fixtures**: Realistic test data spanning multiple sectors
-- **AI Scoring Validation**: Test automation potential assessment
-- **Market Coverage Tests**: Verify wide-net scanning approach
-
-## Slack Integration
-AI-enhanced Block Kit alerts with:
-- **Automation Analysis**: Detailed AI assessment of tech opportunities
-- **Process Improvement**: Specific automation recommendations
-- **Competitive Advantage**: How tech creates unfair advantages
-- **Implementation Roadmap**: Suggested approach for leveraging tech
-- **Market Context**: Industry sophistication and opportunity landscape
-
-## Deployment Strategy
-- **GitHub Actions**: Automated twice-daily market scans
-- **Production Monitoring**: Cross-industry opportunity flow tracking
-- **Alert Quality**: AI ensures only high-automation-potential opportunities surface
-- **Market Intelligence**: Continuous learning about automation opportunities across sectors
-
-## Success Metrics
-- **Opportunity Discovery**: 100+ opportunities scanned daily vs 3-5 previously
-- **Quality Filtering**: AI prevents false positives from misleading NAICS codes
-- **Cost Efficiency**: 90% cost reduction while expanding market coverage
-- **Strategic Positioning**: Technology advantages in traditional contracting sectors
-- **Revenue Diversification**: Multiple industry streams vs single-sector dependency
-
-This system transforms government contracting from "finding IT work" to "using IT to dominate any market" - positioning for sustainable competitive advantages across the entire federal marketplace.
+- **Business isolation**: This workspace is exclusively for ProVision Systems (Software/FedWatch). Do not use context from Woody's Remodeling (Construction).
+- **Memory safety**: Use streams (`fs.createReadStream`) for large files. Run with `--max-old-space-size=4096` for heavy ingestion.
+- **Error logging**: Log full error objects: `console.error("[opportunity-bot] Fatal error:", error)`
+- **Fit-rating priority**: Scoring logic must prioritize NAICS 541511 and 541512.
+- **System dependencies**: `poppler` (PDF extraction) and `docx2txt` (DOCX extraction) via Homebrew on macOS.

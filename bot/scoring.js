@@ -27,9 +27,33 @@ const NEGATIVE_KEYWORDS = [
   "furniture",
   "janitorial",
   "food service",
+  "trash removal",
+  "waste removal",
+  "snow removal",
+  "plowing",
+  "landscaping",
+  "grounds maintenance",
+  "custodial",
+  "painting",
+  "elevator",
+  "hvac",
+  "plumbing",
+  "carpentry",
+  "welding",
+  "concrete",
+  "structural",
+  "parking attendant",
+  "courier",
+  "food delivery",
+  "laundry",
 ];
 
-export function deterministicScore(opportunity, descriptionText = "") {
+/**
+ * @param {object} opportunity - Normalized opportunity
+ * @param {string} descriptionText
+ * @param {{ positive?: string[], negative?: string[] }} [keywords] - Optional config-driven keyword lists. Falls back to hardcoded lists when not provided.
+ */
+export function deterministicScore(opportunity, descriptionText = "", keywords) {
   const haystack = [
     opportunity.title,
     opportunity.solicitationNumber,
@@ -44,20 +68,23 @@ export function deterministicScore(opportunity, descriptionText = "") {
     .join(" ")
     .toLowerCase();
 
+  const positiveList = keywords?.positive ?? POSITIVE_KEYWORDS;
+  const negativeList = keywords?.negative ?? NEGATIVE_KEYWORDS;
+
   let score = 50;
   const matchedSignals = [];
   const mismatchedSignals = [];
 
-  for (const keyword of POSITIVE_KEYWORDS) {
-    if (haystack.includes(keyword)) {
+  for (const keyword of positiveList) {
+    if (haystack.includes(keyword.toLowerCase())) {
       score += 5;
       matchedSignals.push(`keyword:${keyword}`);
     }
   }
 
-  for (const keyword of NEGATIVE_KEYWORDS) {
-    if (haystack.includes(keyword)) {
-      score -= 10;
+  for (const keyword of negativeList) {
+    if (haystack.includes(keyword.toLowerCase())) {
+      score -= 15;
       mismatchedSignals.push(`keyword:${keyword}`);
     }
   }
@@ -139,5 +166,65 @@ export function buildFallbackScore(preScore, thresholds) {
     key_dates: { due_date: "", other_dates: [] },
     attachment_summary: "",
     must_check_items: [],
+  };
+}
+
+/**
+ * Blend deterministic and AI scores, applying eligibility penalties.
+ *
+ * @param {{ preScore: number, matchedSignals: string[], mismatchedSignals: string[] }} deterministicResult
+ * @param {object|null} aiScore - Full AI score object, or null if AI unavailable
+ * @param {{ isEligible: boolean, issues: Array<{ type: string, severity: string, message: string }> }} eligibility
+ * @param {{ minGood: number, minMaybe: number }} thresholds
+ * @returns {object} Final score object in the same shape as AI score
+ */
+export function blendScores(deterministicResult, aiScore, eligibility, thresholds) {
+  const { preScore } = deterministicResult;
+
+  // Count eligibility warnings (not disqualifying — those are handled upstream)
+  const warningCount = eligibility.issues.filter((i) => i.severity === "warning").length;
+  const eligibilityPenalty = warningCount * 15;
+
+  // If AI unavailable, use fallback with eligibility penalty
+  if (!aiScore) {
+    const penalized = Math.max(0, preScore - eligibilityPenalty);
+    const fallback = buildFallbackScore(penalized, thresholds);
+    if (warningCount > 0) {
+      fallback.risks = [
+        ...fallback.risks,
+        ...eligibility.issues.filter((i) => i.severity === "warning").map((i) => i.message),
+      ];
+    }
+    return fallback;
+  }
+
+  // If deterministic score is very low, cap AI contribution
+  let aiContribution = aiScore.fit_score;
+  if (preScore < 25) {
+    aiContribution = Math.min(aiContribution, 40);
+  }
+
+  // Weighted blend: 30% deterministic + 70% AI
+  let blended = Math.round(preScore * 0.3 + aiContribution * 0.7);
+
+  // Apply eligibility penalty
+  blended = Math.max(0, Math.min(100, blended - eligibilityPenalty));
+
+  // Recalculate label from blended score
+  const fit_label = scoreToLabel(blended, thresholds);
+
+  // Build merged risks with eligibility warnings
+  const risks = [...(aiScore.risks || [])];
+  for (const issue of eligibility.issues) {
+    if (issue.severity === "warning") {
+      risks.push(issue.message);
+    }
+  }
+
+  return {
+    ...aiScore,
+    fit_score: blended,
+    fit_label,
+    risks,
   };
 }
