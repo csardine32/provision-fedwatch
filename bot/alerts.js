@@ -7,10 +7,9 @@
 import { createClient } from "@supabase/supabase-js";
 import { Resend } from "resend";
 
-// TODO: After verifying provisionsunlimited.net domain in Resend,
-// switch to csardine@provisionsunlimited.net and jsardine@provisionsunlimited.net
 const RECIPIENTS = [
-  "csardine32@gmail.com",
+  "csardine@provisionsunlimited.net",
+  "jsardine@provisionsunlimited.net",
 ];
 
 // Alert tiers: check 7-day, 3-day, and 1-day windows
@@ -152,7 +151,7 @@ export async function sendDeadlineAlerts({ dryRun = false, verbose = false } = {
 
       try {
         const { error: sendError } = await resend.emails.send({
-          from: "Provisions Alerts <onboarding@resend.dev>",
+          from: "Provisions Alerts <alerts@provisionsunlimited.net>",
           to: RECIPIENTS,
           subject,
           html,
