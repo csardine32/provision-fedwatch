@@ -14,6 +14,7 @@
     "dotenv": "^16.4.5",
     "node-fetch": "^3.3.2",
     "pdf-parse": "^1.1.1",
+    "resend": "^6.9.2",
     "sqlite3": "^5.1.7",
     "word-extractor": "^1.0.4"
   }

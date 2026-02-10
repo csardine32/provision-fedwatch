@@ -15,6 +15,7 @@ import {
   handleStats,
 } from "./intelligence.js";
 import { handleDashboardSync } from "./dashboard_sync.js";
+import { handleAlerts } from "./alerts.js";
 
 dotenv.config();
 
@@ -93,6 +94,9 @@ Analytics Commands:
 Dashboard Commands:
   dashboard-sync <notice_id>   Sync opportunity to deadline dashboard
                                (auto-triggered on status → pursuing)
+  alerts                       Send deadline email alerts
+    --dry-run                  Preview what would be sent
+    --verbose                  Show detailed output
 `);
 }
 
@@ -217,6 +221,11 @@ async function main() {
     const noticeId = positional[0];
     const db = await getDb();
     await handleDashboardSync(db, noticeId);
+    return;
+  }
+
+  if (command === "alerts") {
+    await handleAlerts(flags);
     return;
   }
 
