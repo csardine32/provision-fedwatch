@@ -29,7 +29,10 @@ function queryTopOpportunities(db) {
         notice_id, title, agency_short, solicitation_number,
         last_score, last_fit_label, response_deadline,
         set_aside, naics_code, ui_link, ai_summary, pursuit_status,
-        ai_reasons_json, estimated_value
+        ai_reasons_json, estimated_value,
+        ai_risks_json, ai_skillsets_json, ai_key_dates_json,
+        ai_must_check_json, ai_attachment_summary, ai_is_relevant,
+        SUBSTR(description_text, 1, 2000) as description_excerpt
       FROM opportunities
       WHERE last_score >= 50
         AND last_scored_at IS NOT NULL
@@ -82,6 +85,13 @@ export async function syncTopOpportunities(db, { verbose = false, logger = conso
       pursuit_status: row.pursuit_status || "discovered",
       ai_reasons_json: row.ai_reasons_json || null,
       estimated_value: row.estimated_value || null,
+      ai_risks_json: row.ai_risks_json || null,
+      ai_skillsets_json: row.ai_skillsets_json || null,
+      ai_key_dates_json: row.ai_key_dates_json || null,
+      ai_must_check_json: row.ai_must_check_json || null,
+      ai_attachment_summary: row.ai_attachment_summary || null,
+      ai_is_relevant: row.ai_is_relevant != null ? Boolean(row.ai_is_relevant) : null,
+      description_excerpt: row.description_excerpt || null,
       synced_at: nowIso,
     };
 
