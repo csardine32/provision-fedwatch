@@ -105,7 +105,7 @@ async function runProfile(profile, { db, logger, dryRun, backfillDays, fetchImpl
           });
       }
 
-      const hash = buildOpportunityHash(normalized, descriptionText, attachmentText);
+      const hash = buildOpportunityHash(normalized, descriptionText, "");  // attachments analyzed on-demand only
       await upsertOpportunity(db, normalized, descriptionText, attachmentText, hash, nowIso, { logger });
       const state = await getOpportunityState(db, normalized.noticeId);
 
@@ -177,7 +177,7 @@ async function runProfile(profile, { db, logger, dryRun, backfillDays, fetchImpl
             model: profile.scoring.ai_model,
             opportunity: normalized,
             descriptionText,
-            attachmentText,
+            attachmentText: "",  // attachments analyzed on-demand only
             companyProfile: profile.company_profile,
             logger,
           });

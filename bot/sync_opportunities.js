@@ -32,6 +32,7 @@ function queryTopOpportunities(db) {
         ai_reasons_json, estimated_value,
         ai_risks_json, ai_skillsets_json, ai_key_dates_json,
         ai_must_check_json, ai_attachment_summary, ai_is_relevant,
+        data_json,
         SUBSTR(description_text, 1, 2000) as description_excerpt
       FROM opportunities
       WHERE last_score >= 50
@@ -92,6 +93,10 @@ export async function syncTopOpportunities(db, { verbose = false, logger = conso
       ai_attachment_summary: row.ai_attachment_summary || null,
       ai_is_relevant: row.ai_is_relevant != null ? Boolean(row.ai_is_relevant) : null,
       description_excerpt: row.description_excerpt || null,
+      resource_links_json: (() => {
+        try { return JSON.parse(row.data_json)?.resourceLinks ? JSON.stringify(JSON.parse(row.data_json).resourceLinks) : null; }
+        catch { return null; }
+      })(),
       synced_at: nowIso,
     };
 
