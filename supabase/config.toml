@@ -5,6 +5,9 @@
   [functions."analyze-attachment"]
   verify_jwt = false
 
+  [functions."analyze-adhoc"]
+  verify_jwt = false
+
 # [functions.sam-watcher.schedule]
 # cron = "*/30 * * * *"
 # 
