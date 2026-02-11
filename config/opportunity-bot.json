@@ -17,7 +17,7 @@
         "description_max_chars": 16000,
         "max_descriptions_per_run": 10,
         "max_pages_per_run": 2,
-        "fetch_attachments": false,
+        "fetch_attachments": true,
         "filters": {
           "setAsideCodes": [
             "SDVOSBC",
@@ -133,7 +133,7 @@
         "description_max_chars": 16000,
         "max_descriptions_per_run": 5,
         "max_pages_per_run": 1,
-        "fetch_attachments": false,
+        "fetch_attachments": true,
         "filters": {
           "naics": [
             541511,
@@ -248,7 +248,7 @@
         "description_max_chars": 16000,
         "max_descriptions_per_run": 8,
         "max_pages_per_run": 1,
-        "fetch_attachments": false,
+        "fetch_attachments": true,
         "filters": {
           "naics": [
             541511,
@@ -389,7 +389,7 @@
         "description_max_chars": 16000,
         "max_descriptions_per_run": 10,
         "max_pages_per_run": 2,
-        "fetch_attachments": false,
+        "fetch_attachments": true,
         "filters": {
           "setAsideCodes": [
             "SDVOSBC",
@@ -476,7 +476,7 @@
         "description_max_chars": 16000,
         "max_descriptions_per_run": 10,
         "max_pages_per_run": 2,
-        "fetch_attachments": false,
+        "fetch_attachments": true,
         "filters": {
           "naics": [
             541714,
