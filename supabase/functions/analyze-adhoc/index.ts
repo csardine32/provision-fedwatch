@@ -45,17 +45,33 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { pdf_base64, filename } = await req.json();
+    const { pdf_base64, text_content, filename } = await req.json();
 
-    if (!pdf_base64) {
-      return new Response(JSON.stringify({ error: "pdf_base64 is required" }), {
+    if (!pdf_base64 && !text_content) {
+      return new Response(JSON.stringify({ error: "Either pdf_base64 or text_content is required" }), {
         status: 400,
         headers: { ...CORS_HEADERS, "Content-Type": "application/json" },
       });
     }
 
-    const sizeBytes = Math.ceil(pdf_base64.length * 3 / 4);
-    console.log(`Analyzing ad-hoc PDF: ${filename || "unknown"} (${(sizeBytes / 1024 / 1024).toFixed(1)} MB)`);
+    // Build content blocks based on input type
+    const content: Record<string, unknown>[] = [];
+    if (pdf_base64) {
+      const sizeBytes = Math.ceil(pdf_base64.length * 3 / 4);
+      console.log(`Analyzing ad-hoc PDF: ${filename || "unknown"} (${(sizeBytes / 1024 / 1024).toFixed(1)} MB)`);
+      content.push({
+        type: "document",
+        source: { type: "base64", media_type: "application/pdf", data: pdf_base64 },
+      });
+      content.push({ type: "text", text: ANALYSIS_PROMPT });
+    } else {
+      const textSize = new TextEncoder().encode(text_content).length;
+      console.log(`Analyzing ad-hoc text: ${filename || "unknown"} (${(textSize / 1024).toFixed(1)} KB)`);
+      content.push({
+        type: "text",
+        text: `Here is the solicitation document content:\n\n${text_content}\n\n---\n\n${ANALYSIS_PROMPT}`,
+      });
+    }
 
     // Send to Claude Sonnet via Anthropic Messages API
     const claudeResponse = await fetch("https://api.anthropic.com/v1/messages", {
@@ -70,20 +86,7 @@ Deno.serve(async (req) => {
         max_tokens: 4096,
         messages: [{
           role: "user",
-          content: [
-            {
-              type: "document",
-              source: {
-                type: "base64",
-                media_type: "application/pdf",
-                data: pdf_base64,
-              },
-            },
-            {
-              type: "text",
-              text: ANALYSIS_PROMPT,
-            },
-          ],
+          content,
         }],
         system: "You are a federal contracting analyst. You provide thorough, accurate analysis of government solicitation documents to help small businesses make bid/no-bid decisions.",
       }),
