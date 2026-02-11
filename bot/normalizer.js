@@ -27,6 +27,9 @@ export function normalizeOpportunity(raw) {
   const resourceLinks = Array.isArray(raw?.resourceLinks) ? raw.resourceLinks : [];
   const descriptionLink = raw?.description ?? raw?.descriptionLink ?? raw?.descriptionUrl ?? "";
 
+  // Award amount (populated for Award Notices, null for open solicitations)
+  const awardAmount = raw?.award?.amount ? parseFloat(raw.award.amount) : null;
+
   return {
     noticeId,
     title,
@@ -46,5 +49,6 @@ export function normalizeOpportunity(raw) {
     links,
     resourceLinks,
     descriptionLink,
+    awardAmount,
   };
 }

@@ -16,6 +16,7 @@ import {
 } from "./intelligence.js";
 import { handleDashboardSync } from "./dashboard_sync.js";
 import { handleAlerts } from "./alerts.js";
+import { handleSyncTop } from "./sync_opportunities.js";
 
 dotenv.config();
 
@@ -94,6 +95,8 @@ Analytics Commands:
 Dashboard Commands:
   dashboard-sync <notice_id>   Sync opportunity to deadline dashboard
                                (auto-triggered on status → pursuing)
+  sync-top                     Sync top 25 scored opportunities to dashboard widget
+    --verbose                  Show detailed output
   alerts                       Send deadline email alerts
     --dry-run                  Preview what would be sent
     --verbose                  Show detailed output
@@ -120,12 +123,22 @@ async function main() {
 
   if (command === "run") {
     await runOpportunityBot({ dryRun, configPath, verbose, profileNames });
+    // Auto-sync top opportunities to Supabase if env vars are set
+    if (process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_KEY) {
+      const db = await getDb();
+      await handleSyncTop(db, { verbose });
+    }
     return;
   }
 
   if (command === "backfill") {
     const days = Number(flags.get("days") ?? 7);
     await runOpportunityBot({ dryRun, configPath, backfillDays: days, verbose, profileNames });
+    // Auto-sync top opportunities to Supabase if env vars are set
+    if (process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_KEY) {
+      const db = await getDb();
+      await handleSyncTop(db, { verbose });
+    }
     return;
   }
 
@@ -221,6 +234,12 @@ async function main() {
     const noticeId = positional[0];
     const db = await getDb();
     await handleDashboardSync(db, noticeId);
+    return;
+  }
+
+  if (command === "sync-top") {
+    const db = await getDb();
+    await handleSyncTop(db, { verbose });
     return;
   }
 

@@ -150,6 +150,7 @@ export async function initStorage(dbPath) {
   await safeAddColumn(db, "opportunities", "priority", "INTEGER DEFAULT 0");
   await safeAddColumn(db, "opportunities", "notes", "TEXT");
   await safeAddColumn(db, "opportunities", "folder_path", "TEXT");
+  await safeAddColumn(db, "opportunities", "estimated_value", "TEXT");
 
   // Pursuit events — append-only event log
   await run(
@@ -221,11 +222,50 @@ export async function initStorage(dbPath) {
   return db;
 }
 
+function formatEstimatedValue(amount) {
+  if (!amount || isNaN(amount)) return null;
+  if (amount >= 1_000_000) return `$${(amount / 1_000_000).toFixed(1)}M`;
+  if (amount >= 1_000) return `$${(amount / 1_000).toFixed(0)}K`;
+  return `$${amount.toFixed(0)}`;
+}
+
+function parseValueFromDescription(text) {
+  if (!text) return null;
+  // Look for dollar amounts like $1,500,000 or $500K or $2.5M or $2.5 million
+  const patterns = [
+    /\$\s*([\d,]+(?:\.\d+)?)\s*(?:million|mil)\b/i,
+    /\$\s*([\d,]+(?:\.\d+)?)\s*M\b/,
+    /\$\s*([\d,]+(?:\.\d+)?)\s*K\b/,
+    /\$\s*([\d,]+(?:\.\d+)?)\s*(?:billion|bil)\b/i,
+    /\$\s*([\d,]+(?:\.\d+)?)\b/,
+    /([\d,]+(?:\.\d+)?)\s*(?:million|mil)\s*(?:dollars?)/i,
+  ];
+  for (const re of patterns) {
+    const m = text.match(re);
+    if (!m) continue;
+    const numStr = m[1].replace(/,/g, '');
+    let val = parseFloat(numStr);
+    if (isNaN(val) || val <= 0) continue;
+    const ctx = m[0].toLowerCase();
+    if (ctx.includes('million') || ctx.includes('mil') || m[0].includes('M')) val *= 1_000_000;
+    else if (ctx.includes('billion') || ctx.includes('bil')) val *= 1_000_000_000;
+    else if (m[0].includes('K')) val *= 1_000;
+    // Filter implausible values (< $1K or > $10B)
+    if (val >= 1_000 && val <= 10_000_000_000) return val;
+  }
+  return null;
+}
+
 export async function upsertOpportunity(db, opportunity, descriptionText, attachmentText, hash, nowIso, { logger }) {
   const existing = await get(db, "SELECT notice_id, hash FROM opportunities WHERE notice_id = ?", [
     opportunity.noticeId,
   ]);
   const agencyShort = parseAgencyShort(opportunity.agencyPath);
+
+  // Derive estimated value: award amount (Award Notices) → description parse → null
+  const rawValue = opportunity.awardAmount || parseValueFromDescription(descriptionText);
+  const estimatedValue = formatEstimatedValue(rawValue);
+
   if (!existing) {
             const dataJson = JSON.stringify({
               pointOfContact: opportunity.pointOfContact,
@@ -237,8 +277,8 @@ export async function upsertOpportunity(db, opportunity, descriptionText, attach
               `INSERT INTO opportunities (
                 notice_id, solicitation_number, title, agency, posted_date, response_deadline,
                 naics_code, set_aside, classification_code, ui_link, data_json, description_text, attachment_text,
-                last_seen_at, hash, agency_short
-              ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                last_seen_at, hash, agency_short, estimated_value
+              ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
               [
                 opportunity.noticeId,
                 opportunity.solicitationNumber,
@@ -256,6 +296,7 @@ export async function upsertOpportunity(db, opportunity, descriptionText, attach
                 nowIso,
                 hash,
                 agencyShort,
+                estimatedValue,
               ]
             );
           } else {
@@ -280,7 +321,8 @@ export async function upsertOpportunity(db, opportunity, descriptionText, attach
             attachment_text = ?,
             last_seen_at = ?,
             hash = ?,
-            agency_short = ?
+            agency_short = ?,
+            estimated_value = COALESCE(?, estimated_value)
           WHERE notice_id = ?`,
           [
             opportunity.solicitationNumber,
@@ -298,6 +340,7 @@ export async function upsertOpportunity(db, opportunity, descriptionText, attach
             nowIso,
             hash,
             agencyShort,
+            estimatedValue,
             opportunity.noticeId,
           ]
         );
