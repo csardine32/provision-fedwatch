@@ -1,8 +1,19 @@
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
+const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY") ?? "";
+
+const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
+  auth: { persistSession: false },
+});
 
 const ANALYSIS_PROMPT = `Analyze this solicitation document thoroughly and return a JSON object with the following structure. Be specific and detailed — this analysis helps a small business decide whether to bid.
 
 {
+  "title": "The title or subject of the solicitation",
+  "solicitation_number": "The contract/solicitation number if found, or null",
+  "response_deadline": "The proposal/quote/response due date in ISO 8601 format (YYYY-MM-DDTHH:mm:ss) if found, or null",
   "scope_of_work": "Detailed paragraph describing what the government is buying",
   "key_requirements": ["requirement 1", "requirement 2", ...],
   "required_qualifications": ["certification or qualification 1", ...],
@@ -45,6 +56,18 @@ Deno.serve(async (req) => {
   }
 
   try {
+    // Extract user from JWT
+    const authHeader = req.headers.get("Authorization") || "";
+    const token = authHeader.replace("Bearer ", "");
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+
+    if (authError || !user) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...CORS_HEADERS, "Content-Type": "application/json" },
+      });
+    }
+
     const { pdf_base64, text_content, filename } = await req.json();
 
     if (!pdf_base64 && !text_content) {
@@ -122,10 +145,68 @@ Deno.serve(async (req) => {
       analysis = { raw_analysis: rawText };
     }
 
+    // Extract title and solicitation_number from analysis
+    const extractedTitle = typeof analysis.title === "string" ? analysis.title : null;
+    const extractedSolNum = typeof analysis.solicitation_number === "string" ? analysis.solicitation_number : null;
+
+    const nowIso = new Date().toISOString();
+
+    // Try to match to existing scanner opportunity by solicitation number
+    let matchedOpportunity: Record<string, unknown> | null = null;
+    let matchedNoticeId: string | null = null;
+
+    if (extractedSolNum) {
+      const { data: matchedOpp } = await supabase
+        .from("scanner_opportunities")
+        .select("notice_id, title, agency, last_score, ui_link")
+        .eq("solicitation_number", extractedSolNum)
+        .limit(1)
+        .maybeSingle();
+
+      if (matchedOpp) {
+        matchedNoticeId = matchedOpp.notice_id;
+        matchedOpportunity = matchedOpp;
+
+        // Update the opportunity's attachment analysis
+        const { error: updateErr } = await supabase
+          .from("scanner_opportunities")
+          .update({
+            attachment_analysis_json: JSON.stringify(analysis),
+            attachment_analyzed_at: nowIso,
+          })
+          .eq("notice_id", matchedNoticeId);
+
+        if (updateErr) {
+          console.error("Failed to update matched opportunity:", updateErr);
+        }
+      }
+    }
+
+    // Persist to adhoc_analyses
+    const { data: inserted, error: insertErr } = await supabase
+      .from("adhoc_analyses")
+      .insert({
+        user_id: user.id,
+        filename: filename || "unknown",
+        analysis_json: JSON.stringify(analysis),
+        title: extractedTitle,
+        solicitation_number: extractedSolNum,
+        matched_notice_id: matchedNoticeId,
+        analyzed_at: nowIso,
+      })
+      .select("id")
+      .single();
+
+    if (insertErr) {
+      console.error("Failed to persist adhoc analysis:", insertErr);
+    }
+
     return new Response(JSON.stringify({
       analysis,
       filename: filename || "unknown",
-      analyzed_at: new Date().toISOString(),
+      analyzed_at: nowIso,
+      analysis_id: inserted?.id || null,
+      matched_opportunity: matchedOpportunity,
     }), {
       status: 200,
       headers: { ...CORS_HEADERS, "Content-Type": "application/json" },
