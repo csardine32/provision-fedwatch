@@ -23,19 +23,15 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Run the bot
+      - name: Run the bot and sync all to Supabase
         env:
           SAM_API_KEY: ${{ secrets.SAM_API_KEY }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
           SLACK_BOT_TOKEN_PROVISIONS: ${{ secrets.SLACK_BOT_TOKEN_PROVISIONS }}
-        run: node bot/cli.js run
-
-      - name: Sync top opportunities to dashboard
-        env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
-        run: node bot/cli.js sync-top --verbose
+        run: node bot/cli.js run --verbose
 
       - name: Send Slack Notification
         uses: slackapi/slack-github-action@v1.24.0
