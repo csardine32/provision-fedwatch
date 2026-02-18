@@ -82,7 +82,7 @@ Run the smoke test with:
 
 ```bash
 export SUPABASE_ANON_KEY=your_anon_key
-export SUPABASE_PROJECT_REF=pzqeibaqlwmfglbiumjt
+export SUPABASE_PROJECT_REF=YOUR_PROJECT_REF
 ./scripts/smoke_scorer.sh
 ```
 

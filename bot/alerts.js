@@ -7,10 +7,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { Resend } from "resend";
 
-const RECIPIENTS = [
-  "csardine@provisionsunlimited.net",
-  "jsardine@provisionsunlimited.net",
-];
+const RECIPIENTS = (process.env.ALERT_EMAILS || "").split(",").filter(Boolean);
 
 // Alert tiers: check 7-day, 3-day, and 1-day windows
 const ALERT_TIERS = [

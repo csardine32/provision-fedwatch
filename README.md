@@ -36,7 +36,7 @@ Use your serverless platform of choice (e.g., Supabase Edge Functions) and ensur
 ## Smoke test
 ```bash
 export SUPABASE_ANON_KEY=your_anon_key
-export SUPABASE_PROJECT_REF=pzqeibaqlwmfglbiumjt
+export SUPABASE_PROJECT_REF=YOUR_PROJECT_REF
 ./scripts/smoke_scorer.sh
 ```
 

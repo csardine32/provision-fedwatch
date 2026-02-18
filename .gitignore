@@ -1,6 +1,30 @@
+# Environment files
 .env
+.env.*
+!.env.example
+
+# Data
 .data/
 node_modules/
 *.log
+
+# Supabase temp
 supabase/.temp/
-.env
+
+# Session transcripts
+gemini_session.*
+session_history.md
+
+# macOS
+.DS_Store
+
+# IDE
+.cursor/
+
+# Business documents and bid materials
+downloads/
+analysis/
+solicitations/
+
+# Debug scripts
+debug-*.js
