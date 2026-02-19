@@ -123,10 +123,10 @@ async function main() {
 
   if (command === "run") {
     await runOpportunityBot({ dryRun, configPath, verbose, profileNames });
-    // Auto-sync top opportunities to Supabase if env vars are set
+    // Auto-sync ALL opportunities to Supabase
     if (process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_KEY) {
       const db = await getDb();
-      await handleSyncTop(db, { verbose });
+      await syncAllOpportunities(db, { verbose });
     }
     return;
   }
