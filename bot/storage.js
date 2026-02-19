@@ -152,6 +152,12 @@ export async function initStorage(dbPath) {
   await safeAddColumn(db, "opportunities", "folder_path", "TEXT");
   await safeAddColumn(db, "opportunities", "estimated_value", "TEXT");
 
+  // Location and type fields
+  await safeAddColumn(db, "opportunities", "state", "TEXT");
+  await safeAddColumn(db, "opportunities", "city", "TEXT");
+  await safeAddColumn(db, "opportunities", "zip", "TEXT");
+  await safeAddColumn(db, "opportunities", "notice_type", "TEXT");
+
   // Pursuit events — append-only event log
   await run(
     db,
@@ -277,8 +283,9 @@ export async function upsertOpportunity(db, opportunity, descriptionText, attach
               `INSERT INTO opportunities (
                 notice_id, solicitation_number, title, agency, posted_date, response_deadline,
                 naics_code, set_aside, classification_code, ui_link, data_json, description_text, attachment_text,
-                last_seen_at, hash, agency_short, estimated_value
-              ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                last_seen_at, hash, agency_short, estimated_value,
+                state, city, zip, notice_type
+              ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
               [
                 opportunity.noticeId,
                 opportunity.solicitationNumber,
@@ -297,6 +304,10 @@ export async function upsertOpportunity(db, opportunity, descriptionText, attach
                 hash,
                 agencyShort,
                 estimatedValue,
+                opportunity.state || null,
+                opportunity.city || null,
+                opportunity.zip || null,
+                opportunity.noticeType || null,
               ]
             );
           } else {
@@ -322,7 +333,11 @@ export async function upsertOpportunity(db, opportunity, descriptionText, attach
             last_seen_at = ?,
             hash = ?,
             agency_short = ?,
-            estimated_value = COALESCE(?, estimated_value)
+            estimated_value = COALESCE(?, estimated_value),
+            state = COALESCE(?, state),
+            city = COALESCE(?, city),
+            zip = COALESCE(?, zip),
+            notice_type = COALESCE(?, notice_type)
           WHERE notice_id = ?`,
           [
             opportunity.solicitationNumber,
@@ -341,6 +356,10 @@ export async function upsertOpportunity(db, opportunity, descriptionText, attach
             hash,
             agencyShort,
             estimatedValue,
+            opportunity.state || null,
+            opportunity.city || null,
+            opportunity.zip || null,
+            opportunity.noticeType || null,
             opportunity.noticeId,
           ]
         );
