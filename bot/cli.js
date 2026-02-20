@@ -16,7 +16,7 @@ import {
 } from "./intelligence.js";
 import { handleDashboardSync } from "./dashboard_sync.js";
 import { handleAlerts } from "./alerts.js";
-import { handleSyncTop } from "./sync_opportunities.js";
+import { handleSyncTop, syncAllOpportunities } from "./sync_opportunities.js";
 
 dotenv.config();
 
